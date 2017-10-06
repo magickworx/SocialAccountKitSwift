@@ -1,8 +1,8 @@
 /*****************************************************************************
  *
- * FILE:	AccountCredential.swift
- * DESCRIPTION:	SocialAccountKit: Encapsulates the info to authenticate a user
- * DATE:	Wed, Sep 20 2017
+ * FILE:	FacebookOAuthConfiguration.swift
+ * DESCRIPTION:	SocialAccountKit: OAuth Configuration for Facebook
+ * DATE:	Fri, Sep 15 2017
  * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
@@ -43,52 +43,52 @@
 
 import Foundation
 
-public struct SAKAccountCredential
+public struct FacebookOAuthConfiguration: OAuthConfigurationProtocol
 {
-  var oAuthToken: String! = nil
-  var tokenSecret: String! = nil
+  public var serviceType: OAuthConfigurationServiceType = .facebook
 
-  // Initializes an account credential using OAuth.
-  public init(oAuthToken: String, tokenSecret: String) {
-    self.oAuthToken = oAuthToken
-    self.tokenSecret = tokenSecret
+  public let requestTokenURI = "https://m.facebook.com/v2.10/dialog/oauth"
+  public let authorizationURI = "https://m.facebook.com/v2.10/dialog/oauth"
+  public let accessTokenURI = "https://graph.facebook.com/v2.10/oauth/access_token"
+  public let verifyTokenURI = "https://graph.facebook.com/v2.10/debug_token"
+
+  public var callbackURI = "https://www.facebook.com/connect/login_success.html"
+
+  public var consumerKey = ""
+  public var consumerSecret = ""
+
+  public var permissions: [String] = []
+
+  public var isReady: Bool {
+    return (consumerKey != "" && consumerSecret != "")
   }
 
-  var oAuth2Token: String! = nil
-  var refreshToken: String! = nil
-  var expiryDate: Date! = nil
-
-  var tokenType: String? = nil
-
-  // Initializes an account credential using OAuth 2.
-  public init(oAuth2Token: String, refreshToken: String, expiryDate: Date, tokenType: String = "bearer") {
-    self.oAuth2Token = oAuth2Token
-    self.refreshToken = refreshToken
-    self.expiryDate = expiryDate
-    self.tokenType = tokenType
-  }
-}
-
-extension SAKAccountCredential
-{
-  // This property is only valid for OAuth2 credentials
-  public var oauthToken: String! {
-    return oAuth2Token
+  public init() {
+    readConsumerKeyAndSecret()
   }
 }
 
-// MARK: - Convenience Methods for CoreData (AccountManager)
-extension SAKAccountCredential
+extension FacebookOAuthConfiguration
 {
-  public var oauth1Info: Dictionary<String,String>? {
-    guard let token = oAuthToken, let secret = tokenSecret else {
-      return nil
+  // Facebook.plist に AppID と AppSecret が設定されていたら
+  // それらの値を初期値とする
+  mutating func readConsumerKeyAndSecret(from plist: String = "Facebook") {
+    if let url = Bundle.main.url(forResource: plist, withExtension: "plist") {
+      do {
+        let data = try Data(contentsOf: url)
+        let dict = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as! [String:Any]
+        if let key = dict["AppID"] as? String,
+           let secret = dict["AppSecret"] as? String {
+          consumerKey = key
+          consumerSecret = secret
+          if let scope = dict["Permissions"] as? Array<String> {
+            permissions = scope
+          }
+        }
+      }
+      catch let error {
+        dump(error)
+      }
     }
-    return [ "oauth_token": token, "oauth_token_secret": secret ]
-  }
-
-  public var oauth2Info: Dictionary<String,Any>? {
-    guard let token = oAuth2Token, let refresh = refreshToken, let expiry = expiryDate, let type = tokenType else { return nil }
-    return [ "oauth_token": token, "refresh_token": refresh, "expiry_date": expiry, "token_type": type ]
   }
 }

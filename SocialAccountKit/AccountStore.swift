@@ -3,7 +3,7 @@
  * FILE:	AccountStore.swift
  * DESCRIPTION:	SocialAccountKit: Manipulating and storing accounts.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Fri, Sep 29 2017
+ * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -138,6 +138,11 @@ public final class SAKAccountStore
     let entity = NSEntityDescription()
     entity.name = entityName
     entity.managedObjectClassName = entityName
+    /*
+    if #available(iOS 11.0, *) {
+      entity.indexes = Array<NSFetchIndexDescription>
+    }
+    */
 
     // Create the attributes
     var properties = Array<NSAttributeDescription>()
@@ -148,7 +153,12 @@ public final class SAKAccountStore
       desc.name = name
       desc.attributeType = type
       desc.isOptional = opt
-      desc.isIndexed = idx
+      if #available(iOS 11.0, *) {
+        // Use NSEntityDescription.indexes
+      }
+      else {
+        desc.isIndexed = idx
+      }
       properties.append(desc)
     }
     makeDescription("identifier", .stringAttributeType,     false, true)
@@ -189,7 +199,7 @@ extension SAKAccountStore
   }
 
   fileprivate func account(with entity: Account) -> SAKAccount {
-    let type = SAKAccountType(with: entity.serviceType)
+    let type = SAKAccountType(entity.serviceType)
     let acct = SAKAccount(accountType: type, identifier: entity.identifier)
     if let username = entity.username {
       acct.username = username
@@ -202,8 +212,9 @@ extension SAKAccountStore
     if let   oauth = entity.oauth2Credential,
        let   token = oauth["oauth_token"] as? String,
        let refresh = oauth["refresh_token"] as? String,
-       let  expiry = oauth["expiry_date"] as? Date {
-      acct.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry)
+       let  expiry = oauth["expiry_date"] as? Date,
+       let    type = oauth["token_type"] as? String {
+      acct.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
     }
     return acct
   }
@@ -272,7 +283,7 @@ extension SAKAccountStore
 extension SAKAccountStore
 {
   public func accountType(withAccountTypeIdentifier typeIdentifier: SAKServiceTypeIdentifier) -> SAKAccountType {
-    return SAKAccountType(with: typeIdentifier)
+    return SAKAccountType(typeIdentifier)
   }
 }
 
@@ -312,7 +323,7 @@ extension SAKAccountStore
 
   public func requestAccessToAccounts(with accountType: SAKAccountType, options: Dictionary<String,String>? = nil, completion: @escaping SAKAccountStoreRequestAccessCompletionHandler) {
     switch accountType.identifier {
-      case .twitter:
+      case .twitter, .facebook:
         completion(true, nil)
       default:
         completion(false, SAKError.AccountTypeInvalid)
@@ -325,6 +336,14 @@ extension SAKAccountStore
 @objc(Account)
 fileprivate class Account: NSManagedObject
 {
+}
+
+extension Account
+{
+  @nonobjc public class func fetchRequest() -> NSFetchRequest<Account> {
+    return NSFetchRequest<Account>(entityName: entityName)
+  }
+
   @NSManaged var identifier: String
   @NSManaged var service: Int32
   @NSManaged var username: String?
@@ -372,12 +391,5 @@ fileprivate class Account: NSManagedObject
       guard let oauth = self.oauth2 else { return nil }
       return NSKeyedUnarchiver.unarchiveObject(with: oauth) as? Dictionary<String,Any>
     }
-  }
-}
-
-extension Account
-{
-  @nonobjc public class func fetchRequest() -> NSFetchRequest<Account> {
-    return NSFetchRequest<Account>(entityName: entityName)
   }
 }

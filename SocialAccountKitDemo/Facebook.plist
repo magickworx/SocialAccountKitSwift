@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AppID</key>
+	<string></string>
+	<key>AppSecret</key>
+	<string></string>
+	<key>Permissions</key>
+        <array>
+	        <string>public_profile</string>
+                <string>email</string>
+                <string>manage_pages</string>
+                <string>publish_pages</string>
+                <string>user_posts</string>
+                <string>user_friends</string>
+        </array>
+</dict>
+</plist>

@@ -1,13 +1,12 @@
 /*****************************************************************************
  *
- * FILE:	AccountCredential.swift
- * DESCRIPTION:	SocialAccountKit: Encapsulates the info to authenticate a user
- * DATE:	Wed, Sep 20 2017
+ * FILE:	BaseViewController.swift
+ * DESCRIPTION:	SocialAccountKitDemo: Application Base View Controller
+ * DATE:	Sun, Oct  1 2017
  * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
- * CHECKER:     http://quonos.nl/oauthTester/
  * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
@@ -41,54 +40,63 @@
  *
  *****************************************************************************/
 
-import Foundation
+import UIKit
 
-public struct SAKAccountCredential
+class BaseViewController: UIViewController
 {
-  var oAuthToken: String! = nil
-  var tokenSecret: String! = nil
-
-  // Initializes an account credential using OAuth.
-  public init(oAuthToken: String, tokenSecret: String) {
-    self.oAuthToken = oAuthToken
-    self.tokenSecret = tokenSecret
+  required init(coder aDecoder: NSCoder) {
+    fatalError("NSCoding not supported")
   }
 
-  var oAuth2Token: String! = nil
-  var refreshToken: String! = nil
-  var expiryDate: Date! = nil
-
-  var tokenType: String? = nil
-
-  // Initializes an account credential using OAuth 2.
-  public init(oAuth2Token: String, refreshToken: String, expiryDate: Date, tokenType: String = "bearer") {
-    self.oAuth2Token = oAuth2Token
-    self.refreshToken = refreshToken
-    self.expiryDate = expiryDate
-    self.tokenType = tokenType
+  init() {
+    super.init(nibName: nil, bundle: nil)
+    setup()
   }
-}
 
-extension SAKAccountCredential
-{
-  // This property is only valid for OAuth2 credentials
-  public var oauthToken: String! {
-    return oAuth2Token
-  }
-}
+  override func loadView() {
+    super.loadView()
 
-// MARK: - Convenience Methods for CoreData (AccountManager)
-extension SAKAccountCredential
-{
-  public var oauth1Info: Dictionary<String,String>? {
-    guard let token = oAuthToken, let secret = tokenSecret else {
-      return nil
+    self.edgesForExtendedLayout = []
+    self.extendedLayoutIncludesOpaqueBars = true
+
+    self.view.backgroundColor = .white
+    self.view.autoresizesSubviews = true
+    self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
+
+    var frame: CGRect = self.view.frame
+    let statusBarHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
+    frame.origin.y    += statusBarHeight
+    frame.size.height -= statusBarHeight
+
+    if let navBarHeight: CGFloat = self.navigationController?.navigationBar.bounds.size.height {
+      frame.origin.y    += navBarHeight
+      frame.size.height -= navBarHeight
     }
-    return [ "oauth_token": token, "oauth_token_secret": secret ]
+    self.view.frame = frame
   }
 
-  public var oauth2Info: Dictionary<String,Any>? {
-    guard let token = oAuth2Token, let refresh = refreshToken, let expiry = expiryDate, let type = tokenType else { return nil }
-    return [ "oauth_token": token, "refresh_token": refresh, "expiry_date": expiry, "token_type": type ]
+  func setup() {
+    // actual contents of init(). subclass can override this.
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    // Do any additional setup after loading the view, typically from a nib.
+  }
+
+  override func didReceiveMemoryWarning() {
+    super.didReceiveMemoryWarning()
+    // Dispose of any resources that can be recreated.
+  }
+}
+
+extension BaseViewController
+{
+  public func popup(title: String, message: String) {
+    autoreleasepool {
+      let alertController: UIAlertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+      alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+      self.present(alertController, animated: true, completion: nil)
+    }
   }
 }

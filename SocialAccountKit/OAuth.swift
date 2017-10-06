@@ -1,9 +1,9 @@
 /*****************************************************************************
  *
  * FILE:	OAuth.swift
- * DESCRIPTION:	SocialAccountKit: OAuth 1.0
+ * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Fri, Sep 22 2017
+ * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -47,6 +47,7 @@ import CommonCrypto
 
 // MARK: - 
 public let OAuthDidAuthenticateRequestTokenNotification: String = "OAuthDidAuthenticateRequestTokenNotification"
+public let OAuthDidEndInFailureNotification: String = "OAuthDidEndInFailureNotification"
 public let OAuthAuthenticateCallbackURLKey: String = "OAuthAuthenticateCallbackURLKey"
 
 public let OAuthDidVerifyCredentialsNotification: String = "OAuthDidVerifyCredentialsNotification"
@@ -54,6 +55,7 @@ public let OAuthCredentialsKey: String = "OAuthCredentialsKey"
 
 public extension NSNotification.Name {
   public static let OAuthDidAuthenticateRequestToken = NSNotification.Name(OAuthDidAuthenticateRequestTokenNotification)
+  public static let OAuthDidEndInFailure = NSNotification.Name(OAuthDidEndInFailureNotification)
   public static let OAuthDidVerifyCredentials = NSNotification.Name(OAuthDidVerifyCredentialsNotification)
 }
 
@@ -72,54 +74,48 @@ public protocol OAuthConfigurationProtocol
   var requestTokenURI: String { get }
   var authorizationURI: String { get }
   var accessTokenURI: String { get }
+  var verifyTokenURI: String { get }
 
   var callbackURI: String { set get }
 
   var consumerKey: String { set get }
   var consumerSecret: String { set get }
-}
 
-public struct TwitterOAuthConfiguration: OAuthConfigurationProtocol
-{
-  public var serviceType: OAuthConfigurationServiceType = .twitter
-
-  public let requestTokenURI = "https://api.twitter.com/oauth/request_token"
-  public let authorizationURI = "https://api.twitter.com/oauth/authorize"
-  public let accessTokenURI = "https://api.twitter.com/oauth/access_token"
-
-  // "oob" is out-of-band (See Section 2.1 Temporary Credentials)
-  public var callbackURI = "swift-oauth://callback"
-
-  public var consumerKey = ""
-  public var consumerSecret = ""
-
-  public init() {
-    readConsumerKeyAndSecret()
-  }
+  var isReady: Bool { get }
 }
 
 // MARK: - 
 open class OAuthCredential
 {
+  public init() {
+  }
+
+  // MARK: - OAuth 1.0
   public var oauthToken: String? = nil
   public var oauthTokenSecret: String? = nil
 
   public var oauthVerifier: String? = nil
-
-  public init() {
-  }
 
   public convenience init(token: String, secret: String) {
     self.init()
     self.oauthToken = token
     self.oauthTokenSecret = secret
   }
-}
 
-public class TwitterCredential: OAuthCredential
-{
-  public var userID: String? = nil
-  public var screenName: String? = nil
+  // MARK: - OAuth 2.0
+  public var oauth2Token: String? = nil
+  public var refreshToken: String? = nil
+  public var expiryDate: Date? = nil
+
+  public var tokenType: String? = nil // "bearer", "mac", and so on
+
+  public convenience init(token: String, refresh: String? = nil, expiry: Date, type: String = "bearer") {
+    self.init()
+    self.oauth2Token = token
+    self.refreshToken = refresh
+    self.expiryDate = expiry
+    self.tokenType = type
+  }
 }
 
 public typealias OAuthRequestHandler = (Data?, URLResponse?, Error?) -> Void
@@ -129,9 +125,7 @@ public typealias OAuthRequestHandler = (Data?, URLResponse?, Error?) -> Void
  */
 public class OAuth
 {
-  public var isForceLogin: Bool = false
-
-  var configuration: OAuthConfigurationProtocol
+  public internal(set) var configuration: OAuthConfigurationProtocol
   var credential: OAuthCredential
 
   public init(_ configuration: OAuthConfigurationProtocol, credential: OAuthCredential = OAuthCredential()) {
@@ -193,6 +187,26 @@ public class OAuth
   }
 
   func authorizationHttpField(with method: String, requestURL: URL) -> String {
+    switch configuration.serviceType {
+      case .facebook:
+        return oAuth2HeaderField()
+      default:
+        return oAuth1HeaderField(with: method, requestURL: requestURL)
+    }
+  }
+
+  func oAuth2HeaderField() -> String {
+    guard let  tokenType = credential.tokenType,
+          let oauthToken = credential.oauth2Token else { return "" }
+    switch tokenType {
+      case "bearer":
+        return "Bearer \(oauthToken)"
+      default:
+        return ""
+    }
+  }
+
+  func oAuth1HeaderField(with method: String, requestURL: URL) -> String {
     var param = [String:String]()
     param["oauth_consumer_key"] = configuration.consumerKey
     if let oauthToken = credential.oauthToken {
@@ -330,7 +344,7 @@ public enum OAuthError: Error
       case 503: self = .unavailable
       case 504: self = .gatewayTimeout
       case 999: self = .unconstructedURL
-      default: self = .unknownError(code: code)
+      default:  self = .unknownError(code: code)
     }
   }
 }
@@ -341,6 +355,15 @@ public typealias OAuthAuthenticationHandler = (URL?, Error?) -> Void
 extension OAuth
 {
   public func requestCredentials(handler: @escaping OAuthAuthenticationHandler) {
+    switch self.configuration.serviceType {
+      case .facebook:
+        requestFacebookCredentials(handler: handler)
+      default:
+        requestOAuthCredentials(handler: handler)
+    }
+  }
+
+  func requestOAuthCredentials(handler: @escaping OAuthAuthenticationHandler) {
     if let requestURL = URL(string: configuration.requestTokenURI) {
       request(with: "POST", url: requestURL, completion: {
         [unowned self] (data, response, error) in
@@ -374,7 +397,9 @@ extension OAuth
        let confirmed = queryItems.filter({ $0.name == "oauth_callback_confirmed" }).first {
       if confirmed.value == "true", let oauth_token = token.value {
         var urlString = configuration.authorizationURI + "?\(token.name)=\(oauth_token)"
-        if isForceLogin {
+        if configuration.serviceType == .twitter,
+           let twitterConfig = configuration as? TwitterOAuthConfiguration,
+           twitterConfig.isForceLogin {
           urlString += "&force_login=true"
         }
         url = URL(string: urlString)
@@ -382,6 +407,27 @@ extension OAuth
       }
     }
     return url
+  }
+
+  func requestFacebookCredentials(handler: @escaping OAuthAuthenticationHandler) {
+    if let configuration = self.configuration as? FacebookOAuthConfiguration {
+      // See https://developers.facebook.com/docs/facebook-login/permissions/
+      let scope = configuration.permissions.count > 0
+                ? configuration.permissions.joined(separator: ",")
+                : "public_profile"
+      let urlString = configuration.authorizationURI
+                    + "?response_type=code"
+                    + "&client_id=" + configuration.consumerKey
+                    + "&redirect_uri=" + configuration.callbackURI
+                    + "&scope=" + scope
+      if let url = URL(string: urlString) {
+        addNotification()
+        handler(url, nil)
+      }
+      else {
+        handler(nil, OAuthError(code: 999))
+      }
+    }
   }
 
   func addNotification() {
@@ -402,13 +448,27 @@ extension OAuth
   @objc func obtainAccessToken(_ notification: Notification) {
     removeNotification()
     guard let userInfo = notification.userInfo else { return }
+    if let callbackURL = userInfo[OAuthAuthenticateCallbackURLKey] as? URL {
+      switch self.configuration.serviceType {
+        case .facebook:
+          obtainFacebookAccessToken(with: callbackURL)
+        default:
+          obtainOAuthAccessToken(with: callbackURL)
+      }
+    }
+  }
+}
+
+// MARK: - Handle OAuth Access Token
+extension OAuth
+{
+  func obtainOAuthAccessToken(with callbackURL: URL) {
     /*
      * ios - Best way to parse URL string to get values for keys?
      *     - Stack Overflow
      * https://stackoverflow.com/questions/8756683/best-way-to-parse-url-string-to-get-values-for-keys
      */
-    if let callbackURL = userInfo[OAuthAuthenticateCallbackURLKey] as? URL,
-       let  queryItems = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
+    if let queryItems = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
        let token = queryItems.filter({ $0.name == "oauth_token" }).first,
        let verifier = queryItems.filter({ $0.name == "oauth_verifier" }).first {
       credential.oauthToken = token.value
@@ -443,84 +503,11 @@ extension OAuth
       credential.oauthToken = token.value
       credential.oauthTokenSecret = secret.value
       credential.oauthVerifier = nil
-      verifyCredentials()
-    }
-  }
-
-  func verifyCredentials() {
-    if let requestURL = URL(string: "https://api.twitter.com/1.1/account/verify_credentials.json") {
-      let parameters: [String:String] = [
-        "include_entities" : "false",
-        "skip_status" : "true",
-        "include_email" : "true"
-      ]
-      request(with: "GET", url: requestURL, parameters: parameters, completion: {
-        [unowned self] (data, response, error) in
-        guard error == nil, let data = data else {
-          dump(error)
-          return
-        }
-        if let httpResponse = response as? HTTPURLResponse {
-          if httpResponse.statusCode == 200 {
-            switch self.configuration.serviceType {
-              case .twitter:
-                self.twitterCredentials(with: data)
-              default:
-                break
-            }
-          }
-          else {
-            print("Status code is \(httpResponse.statusCode)")
-            let responseString = String(data: data, encoding: .utf8)
-            dump(responseString)
-          }
-        }
-      })
-    }
-  }
-
-  func twitterCredentials(with data: Data) {
-    do {
-      if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
-        if let screenName = json["screen_name"] as? String,
-           let userIdStr = json["id_str"] as? String,
-           let oauthToken = self.credential.oauthToken,
-           let tokenSecret = self.credential.oauthTokenSecret {
-          let credentials = TwitterCredential(token: oauthToken, secret: tokenSecret)
-          credentials.screenName = screenName
-          credentials.userID = userIdStr
-          let userInfo: [String:Any] = [
-            OAuthCredentialsKey: credentials
-          ]
-          NotificationCenter.default.post(name: .OAuthDidVerifyCredentials, object: nil, userInfo: userInfo)
-        }
-      }
-    }
-    catch let error {
-      dump(error)
-    }
-  }
-}
-
-
-// MARK: - 
-extension TwitterOAuthConfiguration
-{
-  // Xcode の Info.plist に ConsumerKey と ConsumerSecret が設定されていたら
-  // それらの値を初期値とする
-  mutating func readConsumerKeyAndSecret(from plist: String = "Info") {
-    if let url = Bundle.main.url(forResource: plist, withExtension: "plist") {
-      do {
-        let data = try Data(contentsOf: url)
-        let dict = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as! [String:Any]
-        if let key = dict["TwitterConsumerKey"] as? String,
-           let secret = dict["TwitterConsumerSecret"] as? String {
-          consumerKey = key
-          consumerSecret = secret
-        }
-      }
-      catch let error {
-        dump(error)
+      switch self.configuration.serviceType {
+        case .twitter:
+          verifyTwitterCredentials()
+        default:
+          break
       }
     }
   }
@@ -528,7 +515,7 @@ extension TwitterOAuthConfiguration
 
 
 // MARK: - 
-fileprivate extension URL
+extension URL
 {
   var baseURLString: String {
     var array = [String]()
@@ -549,7 +536,7 @@ fileprivate extension URL
 
 
 // MARK: - 
-fileprivate extension String
+extension String
 {
   var urlEncoded: String? {
     let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")

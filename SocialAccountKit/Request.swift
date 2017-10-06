@@ -3,7 +3,7 @@
  * FILE:	Request.swift
  * DESCRIPTION:	SocialAccountKit: Request Wrapper
  * DATE:	Thu, Sep 21 2017
- * UPDATED:	Fri, Sep 29 2017
+ * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -51,11 +51,7 @@ public enum SAKRequestMethod: String
   case PUT    = "PUT"
 }
 
-#if     false
-public typealias SAKRequestHandler = (Data?, URLResponse?, Error?) -> Void
-#else
 public typealias SAKRequestHandler = OAuthRequestHandler
-#endif
 
 public struct SAKRequest
 {
@@ -82,6 +78,13 @@ public struct SAKRequest
           throw SAKError.CredentialItemNotFound
         }
         credential = TwitterCredential(token: token, secret: secret)
+      case .facebook:
+        configuration = FacebookOAuthConfiguration()
+        guard let ac = account.credential,
+              let token = ac.oAuth2Token, let expiry = ac.expiryDate else {
+          throw SAKError.CredentialItemNotFound
+        }
+        credential = FacebookCredential(token: token, expiry: expiry)
       default:
         throw SAKError.AccountTypeInvalid
     }

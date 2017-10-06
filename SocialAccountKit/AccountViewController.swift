@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Fri, Sep 29 2017
+ * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -46,8 +46,6 @@ import UIKit
 
 public class SAKAccountViewController: UINavigationController
 {
-  let rvc = AccountViewController()
-
   required public init(coder aDecoder: NSCoder) {
     fatalError("NSCoding not supported")
   }
@@ -56,7 +54,8 @@ public class SAKAccountViewController: UINavigationController
     super.init(nibName: nil, bundle: nil)
   }
 
-  public init() {
+  public init(accountType type: SAKAccountType = SAKAccountType(.twitter)) {
+    let rvc = AccountViewController(accountType: type)
     super.init(rootViewController: rvc)
   }
 }
@@ -65,12 +64,28 @@ class AccountViewController: UIViewController
 {
   let accountStore = SAKAccountStore.shared
 
-  var configuration = TwitterOAuthConfiguration()
-  var credential: TwitterCredential?
   var oauth: OAuth? = nil
 
   var tableView: UITableView = UITableView()
   var tableData: [SAKAccount] = []
+
+  var accountType: SAKAccountType? = nil {
+    didSet {
+      if let type = accountType {
+        switch type.identifier {
+          case .twitter:
+            let configuration = TwitterOAuthConfiguration()
+            oauth = OAuth(configuration)
+          case .facebook:
+            let configuration = FacebookOAuthConfiguration()
+            oauth = OAuth(configuration)
+            break
+          default:
+            break
+        }
+      }
+    }
+  }
 
   required init(coder aDecoder: NSCoder) {
     fatalError("NSCoding not supported")
@@ -80,13 +95,13 @@ class AccountViewController: UIViewController
     super.init(nibName: nil, bundle: nil)
   }
 
-  public convenience init() {
+  public convenience init(accountType type: SAKAccountType) {
     self.init(nibName: nil, bundle: nil)
     self.title = "Account Manager"
 
-    configuration.consumerKey = "lONGPpCiaKmpjdqt4aaIwj7Xv"
-    configuration.consumerSecret = "V4aWQmxJVCnv3Bd1OUt8KVA2vnMXnjSKczrUotWiwreZQYTBds"
-    oauth = OAuth(configuration)
+    defer {
+      self.accountType = type
+    }
   }
 
   override func didReceiveMemoryWarning() {
@@ -99,7 +114,11 @@ class AccountViewController: UIViewController
 
     self.edgesForExtendedLayout = []
     self.extendedLayoutIncludesOpaqueBars = true
-    self.automaticallyAdjustsScrollViewInsets = false
+    if #available(iOS 11.0, *) {
+    }
+    else {
+      self.automaticallyAdjustsScrollViewInsets = false
+    }
 
     self.view.backgroundColor = .white
     self.view.autoresizesSubviews = true
@@ -112,6 +131,9 @@ class AccountViewController: UIViewController
     tableView.estimatedRowHeight = 48
     tableView.allowsSelectionDuringEditing = true
     tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    if #available(iOS 11.0, *) {
+      tableView.contentInsetAdjustmentBehavior = .never
+    }
     self.view.addSubview(tableView)
   }
 
@@ -275,6 +297,10 @@ extension AccountViewController
                        selector: #selector(verfiyCredentials),
                        name: .OAuthDidVerifyCredentials,
                        object: nil)
+    center.addObserver(self,
+                       selector: #selector(authorizationFailure),
+                       name: .OAuthDidEndInFailure,
+                       object: nil)
   }
 
   func removeNotification() {
@@ -282,53 +308,122 @@ extension AccountViewController
     center.removeObserver(self,
                           name: .OAuthDidVerifyCredentials,
                           object: nil)
+    center.removeObserver(self,
+                          name: .OAuthDidEndInFailure,
+                          object: nil)
   }
 
   func verfiyCredentials(_ notification: Notification) {
     guard let userInfo = notification.userInfo else { return }
-    if let credentials = userInfo[OAuthCredentialsKey] as? TwitterCredential {
-      saveCredentials(credentials)
+    if let accountType = self.accountType,
+       let credentials = userInfo[OAuthCredentialsKey] as? OAuthCredential {
+        saveCredentials(credentials, accountType: accountType)
     }
   }
 
-  func saveCredentials(_ credentials: TwitterCredential) {
-    if let name = credentials.screenName,
-       let token = credentials.oauthToken,
-       let secret = credentials.oauthTokenSecret {
-      let accountType = SAKAccountType(with: .twitter)
-      let account = SAKAccount(accountType: accountType)
-      account.username = name
-      account.credential = SAKAccountCredential(oAuthToken: token, tokenSecret: secret)
-      accountStore.saveAccount(account, withCompletionHandler: {
-        (success, error) in
-        guard success, error == nil else { return }
-        DispatchQueue.main.async { [unowned self] in
-          self.tableData.append(account)
-          let section = 0
-          let row = self.tableData.count - 1
-          let indexPath = IndexPath(row: row, section: section)
-          self.tableView.beginUpdates()
-          self.tableView.insertRows(at: [indexPath], with: .automatic)
-          self.tableView.endUpdates()
-          self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+  func saveCredentials(_ credentials: OAuthCredential, accountType: SAKAccountType) {
+    let account = SAKAccount(accountType: accountType)
+    switch accountType.identifier {
+      case .twitter:
+        if let credentials = credentials as? TwitterCredential,
+           let name = credentials.screenName,
+           let token = credentials.oauthToken,
+           let secret = credentials.oauthTokenSecret {
+          account.username = name
+          account.credential = SAKAccountCredential(oAuthToken: token, tokenSecret: secret)
         }
-      })
+      case .facebook:
+        if let credentials = credentials as? FacebookCredential,
+           let name = credentials.fullName,
+           let type = credentials.tokenType,
+           let token = credentials.oauth2Token,
+           let refresh = credentials.refreshToken,
+           let expiry = credentials.expiryDate {
+          account.username = name
+          account.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
+        }
+        break
+      default:
+        break
     }
+    accountStore.saveAccount(account, withCompletionHandler: {
+      (success, error) in
+      guard success, error == nil else { return }
+      DispatchQueue.main.async { [unowned self] in
+        self.tableData.append(account)
+        let section = 0
+        let row = self.tableData.count - 1
+        let indexPath = IndexPath(row: row, section: section)
+        self.tableView.beginUpdates()
+        self.tableView.insertRows(at: [indexPath], with: .automatic)
+        self.tableView.endUpdates()
+        self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+      }
+    })
   }
 
   func createNewAccount() {
-    guard let oauth = self.oauth else { return }
-    oauth.isForceLogin = true
+    guard let oauth = self.oauth, oauth.configuration.isReady else {
+      configurationUnprepared()
+      return
+    }
     oauth.requestCredentials(handler: {
       (url, error) in
-      if let authenticateURL = url, error == nil {
+      if let authenticateURL = url, let accountType = self.accountType, error == nil {
         DispatchQueue.main.async { [unowned self] in
           autoreleasepool {
-            let viewController = SAKSignInViewController(with: authenticateURL)
+            let viewController = SAKSignInViewController(with: authenticateURL, accountType: accountType)
+            switch accountType.identifier {
+              case .facebook:
+//                viewController.clearCache(in: "facebook.com")
+                viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
+                viewController.callback = oauth.configuration.callbackURI
+              default:
+                break
+            }
             self.present(viewController, animated: true, completion: nil)
           }
         }
       }
+      else if let error = error {
+        var text = String()
+        dump(error, to: &text)
+        self.popup(title: "Error", message: text)
+      }
     })
+  }
+
+  func authorizationFailure(_ notification: Notification) {
+    popup(title: "Failure", message: "Failed to authorize account. Check username and password once again.")
+  }
+
+  func configurationUnprepared() {
+    if let accountType = self.accountType {
+      let service = accountType.description
+      let text: String
+      switch accountType.identifier {
+        case .twitter:
+          text = "Confirm \(service).plist has set ConsumerKey and ConsumerSecret."
+        case .facebook:
+          text = "Confirm \(service).plist has set AppID and AppSecret."
+        default:
+          text = "Unsupported service: \(service)"
+          break
+      }
+      popup(title: "Attention", message: text)
+    }
+  }
+}
+
+extension AccountViewController
+{
+  fileprivate func popup(title: String, message: String) {
+    DispatchQueue.main.async { [unowned self] in
+      autoreleasepool {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+        self.present(alertController, animated: true, completion: nil)
+      }
+    }
   }
 }

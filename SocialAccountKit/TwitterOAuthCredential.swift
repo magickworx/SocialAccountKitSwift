@@ -1,9 +1,9 @@
 /*****************************************************************************
  *
- * FILE:	Account.swift
- * DESCRIPTION:	SocialAccountKit: Encapsulates the info about a user
- * DATE:	Wed, Sep 20 2017
- * UPDATED:	Fri, Oct  6 2017
+ * FILE:	TwitterOAuthCredential.swift
+ * DESCRIPTION:	SocialAccountKit: OAuth Credentails for Twitter
+ * DATE:	Fri, Sep 15 2017
+ * UPDATED:	Thu, Oct  5 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -43,68 +43,61 @@
 
 import Foundation
 
-public class SAKAccount
+public class TwitterCredential: OAuthCredential
 {
-  public internal(set) var accountType: SAKAccountType
-  public internal(set) var identifier: String
-
-  public var username: String? = nil
-  public var credential: SAKAccountCredential? = nil
-
-  init(accountType type: SAKAccountType, identifier: String) {
-    self.accountType = type
-    self.identifier = identifier
-  }
-
-  public convenience init(accountType type: SAKAccountType) {
-    self.init(accountType: type, identifier: UUID().uuidString)
-  }
+  public var userID: String? = nil
+  public var screenName: String? = nil
 }
 
-extension SAKAccount: CustomStringConvertible
+extension OAuth
 {
-  public var description: String {
-    var text: String = "[\(accountType.description)] "
-    switch accountType.identifier {
-      case .twitter:
-        if let screenName = self.username {
-          text += screenName
+  func verifyTwitterCredentials() {
+    let urlString = self.configuration.verifyTokenURI
+    let parameters = [
+      "include_entities" : "false",
+      "skip_status" : "true",
+      "include_email" : "true"
+    ]
+    if let requestURL = URL(string: urlString) {
+      request(with: "GET", url: requestURL, parameters: parameters, completion: {
+        [unowned self] (data, response, error) in
+        guard error == nil, let data = data else {
+          dump(error)
+          return
         }
-      case .facebook:
-        if let fullName = self.username {
-          text += fullName
+        if let httpResponse = response as? HTTPURLResponse {
+          if httpResponse.statusCode == 200 {
+            self.twitterCredentials(with: data)
+          }
+          else {
+            print("Status code is \(httpResponse.statusCode)")
+            let responseString = String(data: data, encoding: .utf8)
+            dump(responseString)
+          }
         }
-      default:
-        break
+      })
     }
-    return text
   }
 
-  public var accountDescription: String {
-    switch accountType.identifier {
-      case .twitter:
-        if let screenName = self.username {
-          return "@" + screenName
+  func twitterCredentials(with data: Data) {
+    do {
+      if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
+        if let screenName = json["screen_name"] as? String,
+           let userIdStr = json["id_str"] as? String,
+           let oauthToken = self.credential.oauthToken,
+           let tokenSecret = self.credential.oauthTokenSecret {
+          let credentials = TwitterCredential(token: oauthToken, secret: tokenSecret)
+          credentials.screenName = screenName
+          credentials.userID = userIdStr
+          let userInfo: [String:Any] = [
+            OAuthCredentialsKey: credentials
+          ]
+          NotificationCenter.default.post(name: .OAuthDidVerifyCredentials, object: nil, userInfo: userInfo)
         }
-      case .facebook:
-        if let fullName = self.username {
-          return fullName
-        }
-      default:
-        break
+      }
     }
-    return accountType.description
-  }
-
-  public var userFullName: String {
-    switch accountType.identifier {
-      case .facebook:
-        if let fullName = self.username {
-          return fullName
-        }
-      default:
-        break
+    catch let error {
+      dump(error)
     }
-    return accountType.description
   }
 }

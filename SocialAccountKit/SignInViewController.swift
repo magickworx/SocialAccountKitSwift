@@ -3,7 +3,7 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Fri, Sep 22 2017
+ * UPDATED:	Fri, Oct  6 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -50,6 +50,14 @@ public class SAKSignInViewController: UIViewController
   public var callback: String = "swift-oauth://callback"
 
   public internal(set) var requestURL: URL?
+  public internal(set) var accountType: SAKAccountType?
+
+  enum SignInState {
+    case ready
+    case request
+    case authorize
+  }
+  var state: SignInState = .ready
 
   var configuration = WKWebViewConfiguration()
   var webView: WKWebView?
@@ -62,17 +70,19 @@ public class SAKSignInViewController: UIViewController
     super.init(nibName: nil, bundle: nil)
   }
 
-  public convenience init(with url: URL, configuration: WKWebViewConfiguration? = nil) {
+  public convenience init(with url: URL, configuration: WKWebViewConfiguration? = nil, accountType type: SAKAccountType = SAKAccountType(.twitter)) {
     self.init()
     self.requestURL = url
     if let configuration = configuration {
       self.configuration = configuration
     }
+    self.accountType = type
   }
 
   deinit {
     if let webView = self.webView, webView.isLoading {
       webView.stopLoading()
+      webView.navigationDelegate = nil
     }
   }
 
@@ -81,23 +91,17 @@ public class SAKSignInViewController: UIViewController
 
     self.edgesForExtendedLayout = []
     self.extendedLayoutIncludesOpaqueBars = true
-    self.automaticallyAdjustsScrollViewInsets = false
+    if #available(iOS 11.0, *) {
+    }
+    else {
+      self.automaticallyAdjustsScrollViewInsets = false
+    }
 
     self.view.backgroundColor = .white
     self.view.autoresizesSubviews = true
     self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
 
-    var frame: CGRect = self.view.bounds
-    let statusBarHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-    frame.origin.y    += statusBarHeight
-    frame.size.height -= statusBarHeight
-
-    if let navBarHeight: CGFloat = self.navigationController?.navigationBar.bounds.size.height {
-      frame.origin.y    += navBarHeight
-      frame.size.height -= navBarHeight
-    }
-
-    webView = WKWebView(frame: frame, configuration: configuration)
+    webView = WKWebView(frame: self.view.bounds, configuration: configuration)
     webView?.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
     webView?.navigationDelegate = self
     self.view.addSubview(webView!)
@@ -122,16 +126,140 @@ public class SAKSignInViewController: UIViewController
 extension SAKSignInViewController: WKNavigationDelegate
 {
   public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-    if let callbackURL = navigationAction.request.url {
-      let urlString = callbackURL.absoluteString
-      if urlString.hasPrefix(callback) {
+    if let callbackURL = navigationAction.request.url, let requestURL = self.requestURL, let accountType = self.accountType {
+      switch accountType.identifier {
+        case .twitter:
+          handleTwitterSignIn(requestURL: requestURL, callbackURL: callbackURL)
+        case .facebook:
+          handleFacebookSignIn(requestURL: requestURL, callbackURL: callbackURL)
+        default:
+          break
+      }
+    }
+    decisionHandler(.allow)
+  }
+
+  fileprivate func handleTwitterSignIn(requestURL: URL, callbackURL: URL) {
+    let urlString = callbackURL.absoluteString
+    if urlString.hasPrefix(callback) {
+      self.dismiss(animated: true, completion: {
+        NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
+            OAuthAuthenticateCallbackURLKey: callbackURL
+        ])
+      })
+    }
+    else {
+      switch state {
+        case .ready: // token 付きリクエスト
+          if requestURL == callbackURL {
+            state = .request
+          }
+        case .request: // username と password 付きリクエスト
+          if requestURL.baseURLString == callbackURL.baseURLString {
+            state = .authorize
+          }
+        case .authorize: // 認証失敗
+          self.dismiss(animated: true, completion: {
+            NotificationCenter.default.post(name: .OAuthDidEndInFailure, object: nil, userInfo: nil)
+          })
+      }
+    }
+  }
+
+  /*
+   * ログインフローを手作業で構築する - Facebook ログイン
+   * https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/
+   */
+  fileprivate func handleFacebookSignIn(requestURL: URL, callbackURL: URL) {
+    if let host = callbackURL.host, host == "www.facebook.com" {
+      if callbackURL.baseURLString == callback {
         self.dismiss(animated: true, completion: {
           NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
-            OAuthAuthenticateCallbackURLKey: callbackURL
+              OAuthAuthenticateCallbackURLKey: callbackURL
           ])
         })
       }
     }
-    decisionHandler(.allow)
+  }
+}
+
+extension SAKSignInViewController
+{
+  /*
+   * swift3 - Any property or method to clear a WKWebiew's cache
+   *        - Stack Overflow
+   * https://stackoverflow.com/questions/43767009/any-property-or-method-to-clear-a-wkwebiews-cache
+   */
+  public func clearCache(of dataTypesSet: WebsiteDataType = .allWebsiteData, in domainSubstring: String? = nil) {
+    let dataStore = WKWebsiteDataStore.default()
+    let dataTypes = dataTypesSet.dataTypes()
+    if let domain = domainSubstring {
+      dataStore.fetchDataRecords(ofTypes: dataTypes) {
+        (records) in
+        for record in records {
+print("Found: \(record.displayName)")
+          guard record.displayName.contains(domain) else { continue }
+          dataStore.removeData(ofTypes: dataTypes, for: [record], completionHandler: {
+            print("Deleted: \(record.displayName)")
+          })
+        }
+      }
+    }
+    else {
+      dataStore.removeData(ofTypes: dataTypes, modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
+    }
+  }
+}
+
+public struct WebsiteDataType: OptionSet
+{
+  public let rawValue: Int
+
+  static let allWebsiteData             = WebsiteDataType(rawValue: 1 << 0)
+  static let diskCache                  = WebsiteDataType(rawValue: 1 << 1)
+  static let memoryCache                = WebsiteDataType(rawValue: 1 << 2)
+  static let offlineWebApplicationCache = WebsiteDataType(rawValue: 1 << 3)
+  static let cookies                    = WebsiteDataType(rawValue: 1 << 4)
+  static let sessionStorage             = WebsiteDataType(rawValue: 1 << 5)
+  static let localStorage               = WebsiteDataType(rawValue: 1 << 6)
+  static let webSQLDatabases            = WebsiteDataType(rawValue: 1 << 7)
+  static let indexedDBDatabases         = WebsiteDataType(rawValue: 1 << 8)
+
+  public init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+
+  func dataTypes() -> Set<String> {
+    if self.contains(.allWebsiteData) {
+      return WKWebsiteDataStore.allWebsiteDataTypes()
+    }
+
+    var types: Set<String> = []
+    if self.contains(.diskCache) { // On-disk caches.
+      types.insert(WKWebsiteDataTypeDiskCache)
+    }
+    if self.contains(.memoryCache) { // In-memory caches.
+      types.insert(WKWebsiteDataTypeMemoryCache)
+    }
+    if self.contains(.offlineWebApplicationCache) {
+      // HTML offline web application caches.
+      types.insert(WKWebsiteDataTypeOfflineWebApplicationCache)
+    }
+    if self.contains(.cookies) { // Cookies.
+      types.insert(WKWebsiteDataTypeCookies)
+    }
+    if self.contains(.sessionStorage) { // HTML session storage.
+      types.insert(WKWebsiteDataTypeSessionStorage)
+    }
+    if self.contains(.localStorage) { // HTML local storage.
+      types.insert(WKWebsiteDataTypeLocalStorage)
+    }
+    if self.contains(.webSQLDatabases) { // WebSQL databases.
+      types.insert(WKWebsiteDataTypeWebSQLDatabases)
+    }
+    if self.contains(.indexedDBDatabases) { // IndexedDB databases.
+      types.insert(WKWebsiteDataTypeIndexedDBDatabases)
+    }
+    return types
   }
 }
