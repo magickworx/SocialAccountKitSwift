@@ -3,7 +3,7 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -51,12 +51,15 @@ public let OAuthDidEndInFailureNotification: String = "OAuthDidEndInFailureNotif
 public let OAuthAuthenticateCallbackURLKey: String = "OAuthAuthenticateCallbackURLKey"
 
 public let OAuthDidVerifyCredentialsNotification: String = "OAuthDidVerifyCredentialsNotification"
+public let OAuthDidMissCredentialsNotification: String = "OAuthDidMissCredentialsNotification"
 public let OAuthCredentialsKey: String = "OAuthCredentialsKey"
+public let OAuthErrorInfoKey: String = "OAuthErrorInfoKey"
 
 public extension NSNotification.Name {
   public static let OAuthDidAuthenticateRequestToken = NSNotification.Name(OAuthDidAuthenticateRequestTokenNotification)
   public static let OAuthDidEndInFailure = NSNotification.Name(OAuthDidEndInFailureNotification)
   public static let OAuthDidVerifyCredentials = NSNotification.Name(OAuthDidVerifyCredentialsNotification)
+  public static let OAuthDidMissCredentials = NSNotification.Name(OAuthDidMissCredentialsNotification)
 }
 
 // MARK: - 
@@ -91,15 +94,26 @@ open class OAuthCredential
   }
 
   // MARK: - OAuth 1.0
-  public var oauthToken: String? = nil
-  public var oauthTokenSecret: String? = nil
+  public internal(set) var oauthToken: String? = nil
+  public internal(set) var oauthTokenSecret: String? = nil
 
-  public var oauthVerifier: String? = nil
+  public internal(set) var oauthVerifier: String? = nil
 
   public convenience init(token: String, secret: String) {
     self.init()
     self.oauthToken = token
     self.oauthTokenSecret = secret
+  }
+
+  public func update(token: String?, verifier: String?) {
+    self.oauthToken = token
+    self.oauthVerifier = verifier
+  }
+
+  public func renew(token: String?, secret: String?) {
+    self.oauthToken = token
+    self.oauthTokenSecret = secret
+    self.oauthVerifier = nil
   }
 
   // MARK: - OAuth 2.0
@@ -179,11 +193,23 @@ public class OAuth
         break
     }
 
-    let task = URLSession.shared.dataTask(with: request) {
+    (URLSession.shared.dataTask(with: request) {
       (data, response, error) in
-      completion(data, response, error)
-    }
-    task.resume()
+      if let httpResponse = response as? HTTPURLResponse {
+        let statusCode = httpResponse.statusCode
+        if let data = data {
+          if statusCode == 200 {
+            completion(data, response, nil)
+          }
+          else {
+            completion(data, response, SAKError.FailedServerResponse(statusCode, data))
+          }
+        }
+      }
+      if let error = error {
+        completion(data, response, SAKError.SendRequestError(error))
+      }
+    }).resume()
   }
 
   func authorizationHttpField(with method: String, requestURL: URL) -> String {
@@ -310,45 +336,6 @@ public class OAuth
 }
 
 
-// MARK: - 
-public enum OAuthError: Error
-{
-  case unknownError(code: Int)
-
-  case badRequest       // 400
-  case unauthorized     // 401
-  case forbidden        // 403
-  case notFound         // 404
-  case methodNotAllowed // 405
-  case requestTimeout   // 408
-  case lengthRequired   // 411
-
-  case serverError      // 500
-  case badGateway       // 502
-  case unavailable      // 503
-  case gatewayTimeout   // 504
-
-  case unconstructedURL
-
-  init(code: Int) {
-    switch code {
-      case 400: self = .badRequest
-      case 401: self = .unauthorized
-      case 403: self = .forbidden
-      case 404: self = .notFound
-      case 405: self = .methodNotAllowed
-      case 408: self = .requestTimeout
-      case 411: self = .lengthRequired
-      case 500: self = .serverError
-      case 502: self = .badGateway
-      case 503: self = .unavailable
-      case 504: self = .gatewayTimeout
-      case 999: self = .unconstructedURL
-      default:  self = .unknownError(code: code)
-    }
-  }
-}
-
 public typealias OAuthAuthenticationHandler = (URL?, Error?) -> Void
 
 // MARK: - 
@@ -364,29 +351,24 @@ extension OAuth
   }
 
   func requestOAuthCredentials(handler: @escaping OAuthAuthenticationHandler) {
-    if let requestURL = URL(string: configuration.requestTokenURI) {
+    let urlString = configuration.requestTokenURI
+    if let requestURL = URL(string: urlString) {
       request(with: "POST", url: requestURL, completion: {
         [unowned self] (data, response, error) in
-        if error == nil, let data = data {
-          if let httpResponse = response as? HTTPURLResponse {
-            if httpResponse.statusCode == 200 {
-              if let responseString = String(data: data, encoding: .utf8) {
-                let url = self.authenticateURL(with: responseString)
-                handler(url, nil)
-              }
-            }
-            else {
-              handler(nil, OAuthError(code: httpResponse.statusCode))
-            }
+        if let httpResponse = response as? HTTPURLResponse,
+           httpResponse.statusCode == 200 {
+          if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            let url = self.authenticateURL(with: responseString)
+            handler(url, nil)
           }
         }
-        else {
+        else if let error = error {
           handler(nil, error)
         }
       })
     }
     else {
-      handler(nil, OAuthError(code: 999))
+      handler(nil, SAKError.UnconstructedURL(urlString))
     }
   }
 
@@ -425,7 +407,7 @@ extension OAuth
         handler(url, nil)
       }
       else {
-        handler(nil, OAuthError(code: 999))
+        handler(nil, SAKError.UnconstructedURL(urlString))
       }
     }
   }
@@ -459,6 +441,20 @@ extension OAuth
   }
 }
 
+extension OAuth
+{
+  func handleCredentialsError(_ error: Error) {
+    NotificationCenter.default.post(name: .OAuthDidMissCredentials, object: nil, userInfo: [
+      OAuthErrorInfoKey: error
+    ])
+  }
+
+  func handleErrorResponse(_ data: Data, statusCode: Int) {
+    let error = SAKError.FailedServerResponse(statusCode, data)
+    handleCredentialsError(error)
+  }
+}
+
 // MARK: - Handle OAuth Access Token
 extension OAuth
 {
@@ -471,25 +467,18 @@ extension OAuth
     if let queryItems = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
        let token = queryItems.filter({ $0.name == "oauth_token" }).first,
        let verifier = queryItems.filter({ $0.name == "oauth_verifier" }).first {
-      credential.oauthToken = token.value
-      credential.oauthVerifier = verifier.value
+      credential.update(token: token.value, verifier: verifier.value)
       if let requestURL = URL(string: configuration.accessTokenURI) {
         request(with: "POST", url: requestURL, completion: {
           [unowned self] (data, response, error) in
-          guard error == nil, let data = data else {
-            dump(error)
-            return
-          }
-          if let httpResponse = response as? HTTPURLResponse {
-            if let responseString = String(data: data, encoding: .utf8) {
-              if httpResponse.statusCode == 200 {
-                self.acquireCredentials(with: responseString)
-              }
-              else {
-                print("Status code is \(httpResponse.statusCode)")
-                dump(responseString)
-              }
+          if let httpResponse = response as? HTTPURLResponse,
+             httpResponse.statusCode == 200 {
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+              self.acquireCredentials(with: responseString)
             }
+          }
+          else if let error = error {
+            self.handleCredentialsError(error)
           }
         })
       }
@@ -500,9 +489,7 @@ extension OAuth
     if let queryItems = responseString.queryItems,
        let token = queryItems.filter({ $0.name == "oauth_token" }).first,
        let secret = queryItems.filter({ $0.name == "oauth_token_secret" }).first {
-      credential.oauthToken = token.value
-      credential.oauthTokenSecret = secret.value
-      credential.oauthVerifier = nil
+      credential.renew(token: token.value, secret: secret.value)
       switch self.configuration.serviceType {
         case .twitter:
           verifyTwitterCredentials()
@@ -613,19 +600,4 @@ fileprivate extension String
 #endif
     return String(hmacBase64)
   }
-}
-
-
-// MARK: - DEBUG for Develpers
-public let debugHandler: OAuthRequestHandler = {
-  (data, response, error) in
-  guard let data = data, error == nil else {
-    dump(error)
-    return
-  }
-  if let httpResponse = response as? HTTPURLResponse {
-    print("Status code is \(httpResponse.statusCode)")
-  }
-  let responseString = String(data: data, encoding: .utf8)
-  dump(responseString)
 }

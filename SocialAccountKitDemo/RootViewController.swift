@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -135,14 +135,17 @@ extension RootViewController
     for account in accounts {
       alert.addAction(UIAlertAction(title: account.username, style: .default, handler: {
         [unowned self] (action: UIAlertAction) -> Void in
-        switch self.accountType.identifier {
-          case .twitter:
-            self.fetchHomeTimeline(with: account)
-          case .facebook:
-            self.fetchFeed(with: account)
-            break
-          default:
-            break
+        self.accountType.with {
+          (service) in
+          switch service {
+            case .twitter:
+              self.fetchHomeTimeline(with: account)
+            case .facebook:
+              self.fetchFeed(with: account)
+              break
+            default:
+              break
+          }
         }
       }))
     }
@@ -214,7 +217,7 @@ extension RootViewController
         request.perform(handler: {
           [unowned self] (data, response, error) in
           guard error == nil, let data = data else {
-            dump(error)
+            self.popup(title: "Error", message: error!.localizedDescription)
             return
           }
           self.tableData.removeAll()
@@ -243,7 +246,7 @@ extension RootViewController
                 }
               }
               catch let error {
-                dump(error)
+                self.popup(title: "Parse Error", message: error.localizedDescription)
               }
             }
             else {
@@ -255,7 +258,7 @@ extension RootViewController
         })
       }
       catch let error {
-        dump(error)
+        self.popup(title: "Request Error", message: error.localizedDescription)
       }
     }
   }
@@ -271,7 +274,7 @@ extension RootViewController
         request.perform(handler: {
           [unowned self] (data, response, error) in
           guard error == nil, let data = data else {
-            dump(error)
+            self.popup(title: "Error", message: error!.localizedDescription)
             return
           }
           self.tableData.removeAll()
@@ -299,7 +302,7 @@ extension RootViewController
                 }
               }
               catch let error {
-                dump(error)
+                self.popup(title: "Parse Error", message: error.localizedDescription)
               }
             }
             else {
@@ -311,7 +314,7 @@ extension RootViewController
         })
       }
       catch let error {
-        dump(error)
+        self.popup(title: "Request Error", message: error.localizedDescription)
       }
     }
   }

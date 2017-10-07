@@ -3,7 +3,7 @@
  * FILE:	AccountType.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates info about particular type.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -63,11 +63,29 @@ extension SAKServiceTypeIdentifier: CustomStringConvertible
 
 public struct SAKAccountType
 {
-  public internal(set) var accessGranted: Bool = false
-  public internal(set) var identifier: SAKServiceTypeIdentifier
+  internal(set) var identifier: SAKServiceTypeIdentifier
 
   public init(_ typeIdentifier: SAKServiceTypeIdentifier) {
     self.identifier = typeIdentifier
+  }
+}
+
+extension SAKAccountType
+{
+  public var accessGranted: Bool {
+    switch identifier {
+      case .twitter, .facebook:
+        return true
+      default:
+        return false
+    }
+  }
+}
+
+extension SAKAccountType
+{
+  public func with(_ block: @escaping (SAKServiceTypeIdentifier) -> Void) {
+    block(identifier)
   }
 }
 

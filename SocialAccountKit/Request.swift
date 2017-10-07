@@ -3,7 +3,7 @@
  * FILE:	Request.swift
  * DESCRIPTION:	SocialAccountKit: Request Wrapper
  * DATE:	Thu, Sep 21 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -58,11 +58,11 @@ public struct SAKRequest
   public internal(set) var account: SAKAccount? = nil
   public internal(set) var method: SAKRequestMethod = .GET
   public internal(set) var URL: URL? = nil
-  public internal(set) var parameters: [String:Any]? = nil
+  public internal(set) var parameters: [String:Any] = [:]
 
   fileprivate var oauth: OAuth? = nil
 
-  public init(forAccount account: SAKAccount, requestMethod method: SAKRequestMethod, url: URL, parameters: [String:Any]? = nil) throws {
+  public init(forAccount account: SAKAccount, requestMethod method: SAKRequestMethod, url: URL, parameters: [String:Any] = [:]) throws {
     self.account = account
     self.method = method
     self.URL = url
@@ -95,8 +95,8 @@ public struct SAKRequest
 extension SAKRequest
 {
   public func perform(handler: @escaping SAKRequestHandler) {
-    if let oauth = self.oauth, let url = self.URL, let parameters = self.parameters {
-     oauth.request(with: method.rawValue, url: url, parameters: parameters, completion: handler)
+    if let oauth = self.oauth, let url = self.URL {
+      oauth.request(with: method.rawValue, url: url, parameters: parameters, completion: handler)
     }
   }
 }

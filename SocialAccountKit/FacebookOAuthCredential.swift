@@ -3,7 +3,7 @@
  * FILE:	FacebookOAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentials for Facebook
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -85,7 +85,7 @@ extension OAuth
       }
     }
     catch let error {
-      dump(error)
+      handleCredentialsError(error)
     }
   }
 
@@ -136,7 +136,7 @@ extension OAuth
       }
     }
     catch let error {
-      dump(error)
+      handleCredentialsError(error)
     }
   }
 
@@ -160,22 +160,22 @@ extension OAuth
 
   fileprivate func sendRequest(_ request: URLRequest, handler: @escaping FacebookRequestHandler) {
     (URLSession.shared.dataTask(with: request) {
-      (data, response, error) in
+      [unowned self] (data, response, error) in
       if error == nil, let data = data {
         if let httpResponse = response as? HTTPURLResponse {
-          if httpResponse.statusCode == 200 {
+          let statusCode = httpResponse.statusCode
+          if statusCode == 200 {
             handler(data)
           }
           else {
-            print("Status code is \(httpResponse.statusCode)")
-            if let responseString = String(data: data, encoding: .utf8) {
-              print(responseString)
-            }
+            self.handleErrorResponse(data, statusCode: statusCode)
           }
         }
       }
       else {
-        dump(error)
+        if let error = error {
+          self.handleCredentialsError(error)
+        }
       }
     }).resume()
   }

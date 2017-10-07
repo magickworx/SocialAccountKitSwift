@@ -3,7 +3,7 @@
  * FILE:	Error.swift
  * DESCRIPTION:	SocialAccountKit: Account Error
  * DATE:	Mon, Sep 25 2017
- * UPDATED:	Wed, Sep 27 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -45,7 +45,7 @@ import Foundation
 
 public let SAKErrorDomain = "SAKErrorDomain"
 
-public enum SAKError: Error
+public enum SAKError: LocalizedError
 {
   case Unknown
 
@@ -59,19 +59,28 @@ public enum SAKError: Error
   case AccessInfoInvalid
   case ClientPermissionDenied
   case AccessDeniedByProtectionPolicy
+
   case CredentialNotFound
   case FetchCredentialFailed
   case StoreCredentialFailed
   case RemoveCredentialFailed
+
   case UpdatingNonexistentAccount
   case InvalidClientBundleID
   case DeniedByPlugin
   case CoreDataSaveFailed
+  case CoreDataFetchError(Error)
   case FailedSerializingAccountInfo
-  case InvalidCommand
-  case MissingTransportMessageID
+
   case CredentialItemNotFound
   case CredentialItemNotExpired
+
+  case UnconstructedURL(String)
+
+  case FailedServerResponse(Int, Data)
+  case SendRequestError(Error)
+
+  case OAuthConfigurationError(Error)
 }
 
 extension SAKError: CustomStringConvertible
@@ -120,16 +129,50 @@ extension SAKError: CustomStringConvertible
         return "A plugin prevented the expected action to occur."
       case .CoreDataSaveFailed:
         return "Something broke below us when we tried to the CoreData store."
+      case .CoreDataFetchError(let error):
+        return "Fetch failure: \(error.localizedDescription)"
       case .FailedSerializingAccountInfo:
         return ""
-      case .InvalidCommand:
-        return ""
-      case .MissingTransportMessageID:
-        return ""
+
       case .CredentialItemNotFound:
         return "Credential item wasn't saved because it could not be found."
       case .CredentialItemNotExpired:
         return "Credential item wasn't removed because it has not yet expired."
+
+      case .UnconstructedURL(let urlString):
+        return "Unconstructed URL: \(urlString)"
+
+      case .FailedServerResponse(let statusCode, let data):
+        var text: String = ""
+        if let responseString = String(data: data, encoding: .utf8) {
+          text = "Status code: \(statusCode)\n" + responseString
+        }
+        do {
+          if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
+            if let errors = json["errors"] as? [[String:Any]],
+               let error = errors.first {
+              if let message = error["message"] as? String,
+                 let code = error["code"] as? Int {
+                text = "Status code: \(statusCode)\n"
+                     + "Error code: \(code)\n"
+                     + "\(message)"
+              }
+            }
+          }
+        }
+        catch {
+        }
+        return text
+
+      case .SendRequestError(let error):
+        return "Request had an error.\n\(error.localizedDescription)"
+
+      case .OAuthConfigurationError(let error):
+        return "Failed to read configuration parameters.\n\(error.localizedDescription)"
     }
+  }
+
+  public var errorDescription: String? {
+    return self.description
   }
 }

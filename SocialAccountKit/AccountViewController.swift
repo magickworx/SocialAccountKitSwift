@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -170,7 +170,7 @@ extension AccountViewController
 {
   func loadData() {
     DispatchQueue.main.async { [unowned self] in
-      self.tableData = self.accountStore.readAllAccounts()
+      self.tableData = self.accountStore.accounts
       self.tableView.reloadData()
     }
   }
@@ -283,9 +283,11 @@ extension AccountViewController: UITableViewDelegate
     if tableView.isEditing && indexPath.row == tableData.count {
       createNewAccount()
     }
+/*
     else {
       dump(tableData[indexPath.row])
     }
+*/
   }
 }
 
@@ -298,6 +300,10 @@ extension AccountViewController
                        name: .OAuthDidVerifyCredentials,
                        object: nil)
     center.addObserver(self,
+                       selector: #selector(missCredentials),
+                       name: .OAuthDidMissCredentials,
+                       object: nil)
+    center.addObserver(self,
                        selector: #selector(authorizationFailure),
                        name: .OAuthDidEndInFailure,
                        object: nil)
@@ -307,6 +313,9 @@ extension AccountViewController
     let center = NotificationCenter.default
     center.removeObserver(self,
                           name: .OAuthDidVerifyCredentials,
+                          object: nil)
+    center.removeObserver(self,
+                          name: .OAuthDidMissCredentials,
                           object: nil)
     center.removeObserver(self,
                           name: .OAuthDidEndInFailure,
@@ -391,6 +400,13 @@ extension AccountViewController
         self.popup(title: "Error", message: text)
       }
     })
+  }
+
+  func missCredentials(_ notification: Notification) {
+    guard let userInfo = notification.userInfo else { return }
+    if let error = userInfo[OAuthErrorInfoKey] as? Error {
+      popup(title: "Error", message: error.localizedDescription)
+    }
   }
 
   func authorizationFailure(_ notification: Notification) {

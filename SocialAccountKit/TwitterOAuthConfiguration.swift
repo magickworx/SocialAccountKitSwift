@@ -3,7 +3,7 @@
  * FILE:	TwitterOAuthConfiguration.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Configuration for Twitter
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -65,7 +65,7 @@ public struct TwitterOAuthConfiguration: OAuthConfigurationProtocol
   }
 
   public init() {
-    readConsumerKeyAndSecret()
+    try? readConsumerKeyAndSecret()
   }
 }
 
@@ -73,19 +73,19 @@ extension TwitterOAuthConfiguration
 {
   // Twitter.plist に ConsumerKey と ConsumerSecret が設定されていたら
   // それらの値を初期値とする
-  mutating func readConsumerKeyAndSecret(from plist: String = "Twitter") {
+  mutating func readConsumerKeyAndSecret(from plist: String = "Twitter") throws {
     if let url = Bundle.main.url(forResource: plist, withExtension: "plist") {
       do {
         let data = try Data(contentsOf: url)
         let dict = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as! [String:Any]
-        if let key = dict["ConsumerKey"] as? String,
+        if let    key = dict["ConsumerKey"] as? String,
            let secret = dict["ConsumerSecret"] as? String {
           consumerKey = key
           consumerSecret = secret
         }
       }
       catch let error {
-        dump(error)
+        throw SAKError.OAuthConfigurationError(error)
       }
     }
   }

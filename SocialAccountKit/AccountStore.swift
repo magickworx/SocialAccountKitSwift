@@ -3,7 +3,7 @@
  * FILE:	AccountStore.swift
  * DESCRIPTION:	SocialAccountKit: Manipulating and storing accounts.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -67,7 +67,9 @@ public final class SAKAccountStore
   public internal(set) var accounts = [SAKAccount]()
 
   init() {
-    accounts = readAllAccounts()
+    if let acts = (try? readAllAccounts()).flatMap({ $0 }) {
+      accounts = acts
+    }
   }
 
   deinit {
@@ -219,7 +221,7 @@ extension SAKAccountStore
     return acct
   }
 
-  func readAllAccounts() -> [SAKAccount] {
+  fileprivate func readAllAccounts() throws -> [SAKAccount] {
     var accounts = [SAKAccount]()
     let context = persistentContainer.viewContext
     let fetchRequest: NSFetchRequest = Account.fetchRequest()
@@ -230,7 +232,7 @@ extension SAKAccountStore
       }
     }
     catch let error {
-      dump(error)
+      throw SAKError.CoreDataFetchError(error)
     }
     return accounts
   }
@@ -246,7 +248,7 @@ extension SAKAccountStore
       }
     }
     catch let error {
-      throw error
+      throw SAKError.CoreDataFetchError(error)
     }
     return nil
   }
@@ -264,7 +266,7 @@ extension SAKAccountStore
       }
     }
     catch let error {
-      throw error
+      throw SAKError.CoreDataFetchError(error)
     }
   }
 }

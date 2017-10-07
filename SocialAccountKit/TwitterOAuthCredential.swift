@@ -3,7 +3,7 @@
  * FILE:	TwitterOAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentails for Twitter
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Thu, Oct  5 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -61,19 +61,14 @@ extension OAuth
     if let requestURL = URL(string: urlString) {
       request(with: "GET", url: requestURL, parameters: parameters, completion: {
         [unowned self] (data, response, error) in
-        guard error == nil, let data = data else {
-          dump(error)
-          return
-        }
-        if let httpResponse = response as? HTTPURLResponse {
-          if httpResponse.statusCode == 200 {
+        if let httpResponse = response as? HTTPURLResponse,
+           httpResponse.statusCode == 200 {
+          if let data = data {
             self.twitterCredentials(with: data)
           }
-          else {
-            print("Status code is \(httpResponse.statusCode)")
-            let responseString = String(data: data, encoding: .utf8)
-            dump(responseString)
-          }
+        }
+        if let error = error {
+          self.handleCredentialsError(error)
         }
       })
     }
@@ -97,7 +92,7 @@ extension OAuth
       }
     }
     catch let error {
-      dump(error)
+      handleCredentialsError(error)
     }
   }
 }
