@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Mon, Oct  9 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -170,8 +170,11 @@ extension AccountViewController
 {
   func loadData() {
     DispatchQueue.main.async { [unowned self] in
-      self.tableData = self.accountStore.accounts
-      self.tableView.reloadData()
+      if let accountType = self.accountType,
+         let accounts = self.accountStore.accounts(with: accountType) {
+        self.tableData = accounts
+        self.tableView.reloadData()
+      }
     }
   }
 
