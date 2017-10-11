@@ -3,7 +3,7 @@
  * FILE:	ComposeViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Compose Tweet
  * DATE:	Sun, Oct  8 2017
- * UPDATED:	Tue, Oct 10 2017
+ * UPDATED:	Wed, Oct 11 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -58,7 +58,7 @@ public class SAKComposeViewController: UIViewController
 {
   public class func isAvailable(for accountType: SAKAccountType) -> Bool {
     switch accountType.identifier {
-      case .twitter:
+      case .twitter, .facebook:
         guard let accounts = SAKAccountStore.shared.accounts(with: accountType)  else { return false }
         return (accounts.count > 0)
       default: return false
@@ -120,13 +120,27 @@ public class SAKComposeViewController: UIViewController
 
   var numberOfChars: Int = 0 {
     didSet {
-      let remaining = maxTweetLength - numberOfChars
-      let isValid: Bool = (remaining >= 0 && numberOfChars > 0)
-      charactersLabel.text = "\(remaining)"
-      postItem.isEnabled = isValid
-      charactersLabel.textColor = isValid && remaining > mediaURLLength
-                                ? .lightGray
-                                : remaining == maxTweetLength ? .darkGray : .red
+      if let accountType = self.accountType {
+        accountType.with {
+          [unowned self] (service) in
+          let textLen = self.numberOfChars
+          let hasText = textLen > 0
+          switch service {
+            case .twitter:
+              let remaining = self.maxTweetLength - textLen
+              let isValid: Bool = (remaining >= 0 && hasText)
+              self.charactersLabel.text = "\(remaining)"
+              self.postItem.isEnabled = isValid
+              self.charactersLabel.textColor
+                = isValid && remaining > self.mediaURLLength
+                ? .lightGray : remaining == self.maxTweetLength ? .darkGray
+                                                                : .red
+            default:
+              self.charactersLabel.text = "\(textLen)"
+              self.postItem.isEnabled = hasText
+          }
+        }
+      }
     }
   }
 
@@ -218,13 +232,10 @@ public class SAKComposeViewController: UIViewController
     backItem.setTitleTextAttributes([
       NSForegroundColorAttributeName: self.view.tintColor
     ], for: [])
-    sheetItem.backBarButtonItem = backItem
-
-    if #available(iOS 11.0, *) {
-      if let accountType = self.accountType {
-        backItem.title = accountType.description
-      }
+    if let accountType = self.accountType {
+      backItem.title = accountType.description
     }
+    sheetItem.backBarButtonItem = backItem
 
     // MARK: - prepare compose area
     textView.font = UIFont.systemFont(ofSize: 14.0)
@@ -234,6 +245,7 @@ public class SAKComposeViewController: UIViewController
     numberOfChars = 0
     charactersLabel.font = UIFont.systemFont(ofSize: 12.0)
     charactersLabel.textAlignment = .left
+    charactersLabel.textColor = .lightGray
     footerView.addSubview(charactersLabel)
     composeView.addSubview(footerView)
 
@@ -366,6 +378,8 @@ extension SAKComposeViewController
         switch service {
           case .twitter:
             self.tweet(text, with: account)
+          case .facebook:
+            self.feed(text, with: account)
           default:
             break
         }
@@ -379,6 +393,35 @@ extension SAKComposeViewController
       let parameters: [String:Any] = [
         "status": text,
         "trim_user": true
+      ]
+      do {
+        let request = try SAKRequest(forAccount: account, requestMethod: .POST, url: url, parameters: parameters)
+        request.perform(handler: {
+          [unowned self] (data, response, error) in
+          if let error = error {
+            self.dismiss(with: .error(error))
+          }
+          else if let data = data {
+            let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any]).flatMap { $0 }
+            self.dismiss(with: .done(json))
+          }
+          else {
+            self.dismiss(with: .done(nil))
+          }
+        })
+      }
+      catch let error {
+        dismiss(with: .error(error))
+      }
+    }
+  }
+
+  func feed(_ text: String, with account: SAKAccount) {
+    let endpoint = "https://graph.facebook.com/v2.10/me/feed"
+    if let url = URL(string: endpoint) {
+      let parameters: [String:Any] = [
+        "message": text,
+        "privacy": "{\"value\": \"SELF\"}"
       ]
       do {
         let request = try SAKRequest(forAccount: account, requestMethod: .POST, url: url, parameters: parameters)
@@ -428,8 +471,9 @@ extension SAKComposeViewController: UITextViewDelegate
     
   public func textViewDidBeginEditing(_ textView: UITextView) {
     if let text = textView.text {
+      // XXX: 文字列の終端にカーソルを移動
       let len = text.characters.count
-      textView.selectedRange = NSRange(location: 0, length: len)
+      textView.selectedRange = NSRange(location: len, length: 0)
     }
   }
 }

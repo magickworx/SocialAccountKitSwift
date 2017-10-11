@@ -12,6 +12,7 @@
                 <string>email</string>
                 <string>manage_pages</string>
                 <string>publish_pages</string>
+                <string>publish_actions</string>
                 <string>user_posts</string>
                 <string>user_friends</string>
         </array>

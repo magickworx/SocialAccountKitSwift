@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Tue, Oct 10 2017
+ * UPDATED:	Wed, Oct 11 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -222,8 +222,22 @@ extension RootViewController
             case .cancelled:
               print("cancelled")
             case .done(let json): // XXX: 'json' may be 'nil'.
-              if let json = json, let text = json["text"] as? String {
-                self.popup(title: "Successful", message: text)
+              if let dict = json {
+                self.accountType.with {
+                  (service) in
+                  switch service {
+                    case .twitter:
+                      if let text = dict["text"] as? String {
+                        self.popup(title: "Successful", message: text)
+                      }
+                    case .facebook:
+                      if let text = dict["id"] as? String {
+                        self.popup(title: "Successful", message: "post ID: " + text)
+                      }
+                    default:
+                      break
+                  }
+                }
               }
               else {
                 self.popup(title: "Successful", message: "Tweeted")
