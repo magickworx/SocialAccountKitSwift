@@ -3,7 +3,7 @@
  * FILE:	ComposeViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Compose Tweet
  * DATE:	Sun, Oct  8 2017
- * UPDATED:	Mon, Oct  9 2017
+ * UPDATED:	Tue, Oct 10 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -48,7 +48,7 @@ import QuartzCore
 public enum SAKComposeViewControllerResult
 {
   case cancelled
-  case done
+  case done([String:Any]?)
   case error(Error)
 }
 
@@ -69,7 +69,7 @@ public class SAKComposeViewController: UIViewController
     (result) in
     switch result {
       case .cancelled: break
-      case .done: break
+      case .done(_): break
       case .error(_): break
     }
   }
@@ -342,14 +342,25 @@ public class SAKComposeViewController: UIViewController
 
 extension SAKComposeViewController
 {
+  fileprivate func dismiss(with result: SAKComposeViewControllerResult) {
+    DispatchQueue.main.async {
+      [weak self] in
+      if let weakSelf = self {
+        weakSelf.dismiss(animated: true, completion: {
+          weakSelf.completionHandler(result)
+        })
+      }
+    }
+  }
+
   func didTapCancel(_ item: UIBarButtonItem) {
-    completionHandler(.cancelled)
-    dismiss(animated: true, completion: nil)
+    dismiss(with: .cancelled)
   }
 
   func didTapPost(_ item: UIBarButtonItem) {
     if let accountType = self.accountType, let account = self.account,
        let text = textView.text {
+      textView.resignFirstResponder()
       accountType.with {
         [unowned self] (service) in
         switch service {
@@ -374,17 +385,19 @@ extension SAKComposeViewController
         request.perform(handler: {
           [unowned self] (data, response, error) in
           if let error = error {
-            self.completionHandler(.error(error))
+            self.dismiss(with: .error(error))
+          }
+          else if let data = data {
+            let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any]).flatMap { $0 }
+            self.dismiss(with: .done(json))
           }
           else {
-            self.completionHandler(.done)
+            self.dismiss(with: .done(nil))
           }
-          self.dismiss(animated: true, completion: nil)
         })
       }
       catch let error {
-        completionHandler(.error(error))
-        dismiss(animated: true, completion: nil)
+        dismiss(with: .error(error))
       }
     }
   }
@@ -408,13 +421,16 @@ extension SAKComposeViewController: UITextViewDelegate
   public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
     if let string = textView.text {
       let newText = string.replacingCharacters(in: range, with: text)
-      numberOfChars = newText.lengthOfBytes(using: .utf8)
+      numberOfChars = newText.characters.count
     }
     return true
   }
     
   public func textViewDidBeginEditing(_ textView: UITextView) {
-    textView.selectedRange = NSRange(location: 0, length: 0)
+    if let text = textView.text {
+      let len = text.characters.count
+      textView.selectedRange = NSRange(location: 0, length: len)
+    }
   }
 }
 

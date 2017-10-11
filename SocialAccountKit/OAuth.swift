@@ -3,7 +3,7 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Tue, Oct 10 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -116,6 +116,10 @@ open class OAuthCredential
     self.oauthVerifier = nil
   }
 
+  public var isValidOAuth: Bool {
+    return (oauthToken != nil && oauthTokenSecret != nil)
+  }
+
   // MARK: - OAuth 2.0
   public var oauth2Token: String? = nil
   public var refreshToken: String? = nil
@@ -148,41 +152,52 @@ public class OAuth
   }
 
   public func request(with method: String, url: URL, parameters: [String:Any] = [:], completion: @escaping OAuthRequestHandler) {
-    var requestURL: URL = url
-
-    let parametersString: String = parameters.enumerated().reduce("") {
+    let glueCount = parameters.count - 1 // パラメータ間の '&' の個数
+    let queryString: String = parameters.enumerated().reduce("") {
       (input, tuple) -> String in
+      var key = tuple.element.key
+      if let encodedKey = key.urlEncoded {
+        key = encodedKey
+      }
       switch tuple.element.value {
+        case let bool as Bool:
+          return input + key + "=" + (bool ? "true" : "false")
+                       + (glueCount > tuple.offset ? "&" : "")
         case let int as Int:
-          return input + tuple.element.key + "=" + String(int) + (parameters.count - 1 > tuple.offset ? "&" : "")
+          return input + key + "=" + String(int)
+                       + (glueCount > tuple.offset ? "&" : "")
         case let string as String:
-          return input + tuple.element.key + "=" + string + (parameters.count - 1 > tuple.offset ? "&" : "")
+          var value = string
+          if let encodedValue = value.urlEncoded {
+            value = encodedValue
+          }
+          return input + key + "=" + value
+                       + (glueCount > tuple.offset ? "&" : "")
         default:
           return input
       }
     }
 
     var request = URLRequest(url: url)
-    if method == "GET" && parameters.count > 0 {
+    if method == "GET" && !parameters.isEmpty {
       var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-      components?.query = parametersString
+      components?.query = queryString
       if let newURL = components?.url {
         request = URLRequest(url: newURL)
-        requestURL = newURL
       }
     }
 
     request.httpMethod = method
     request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-    let authField = authorizationHttpField(with: method, requestURL: requestURL)
+    let authField = authorizationHttpField(with: method, url: url.baseStringURI, query: queryString.isEmpty ? nil : queryString)
     request.setValue(authField, forHTTPHeaderField: "Authorization")
 
     request.setValue("application/json", forHTTPHeaderField: "Accept")
     switch method {
       case "POST":
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        if parameters.count > 0 {
-          request.httpBody = parametersString.data(using: String.Encoding.utf8)
+        if !parameters.isEmpty {
+          request.httpBody = queryString.data(using: .utf8)
           var length: Int = 0
           if let body = request.httpBody {
             length = body.count
@@ -212,12 +227,12 @@ public class OAuth
     }).resume()
   }
 
-  func authorizationHttpField(with method: String, requestURL: URL) -> String {
+  func authorizationHttpField(with method: String, url: URL, query: String?) -> String {
     switch configuration.serviceType {
       case .facebook:
         return oAuth2HeaderField()
       default:
-        return oAuth1HeaderField(with: method, requestURL: requestURL)
+        return oAuth1HeaderField(with: method, url: url, query: query)
     }
   }
 
@@ -232,7 +247,7 @@ public class OAuth
     }
   }
 
-  func oAuth1HeaderField(with method: String, requestURL: URL) -> String {
+  func oAuth1HeaderField(with method: String, url: URL, query: String?) -> String {
     var param = [String:String]()
     param["oauth_consumer_key"] = configuration.consumerKey
     if let oauthToken = credential.oauthToken {
@@ -245,8 +260,10 @@ public class OAuth
     param["oauth_timestamp"] = String(Int64(Date().timeIntervalSince1970))
     param["oauth_nonce"] = nonce()
     param["oauth_version"] = "1.0"
-    param["oauth_callback"] = configuration.callbackURI
-    param["oauth_signature"] = signature(with: method, url: requestURL, parameters: param)
+    if !credential.isValidOAuth {
+      param["oauth_callback"] = configuration.callbackURI
+    }
+    param["oauth_signature"] = signature(with: method, url: url, query: query, parameters: param)
     let oauthField = oauthString(with: param)
     return oauthField
   }
@@ -256,14 +273,14 @@ public class OAuth
     return uuid.substring(to: uuid.index(uuid.startIndex, offsetBy: 8))
   }
 
-  func signature(with method: String, url: URL, parameters: [String:String]) -> String {
+  func signature(with method: String, url: URL, query: String?, parameters: [String:String]) -> String {
     var signatureArray = [String]() // for Signature Base String
 
     // The HTTP request method (e.g., "GET", "POST", etc).
     signatureArray.append(method.uppercased())
 
     // RFC 5849 Section 3.4.1.2
-    if let urlString = url.baseURLString.urlEncoded {
+    if let urlString = url.baseStringURIString.urlEncoded {
       signatureArray.append(urlString)
     }
 
@@ -277,15 +294,11 @@ public class OAuth
       }
     }
 
-    if let query = url.query {
+    if let query = query {
       let queryArray = query.components(separatedBy: "&")
-      for str in queryArray {
-        let arr = str.components(separatedBy: "=")
-        if let  name = arr[0].urlEncoded,
-           let value = arr[1].urlEncoded {
-          let line = String(format: "%@=%@", name, value)
-          parameterArray.append(line)
-        }
+      for pair in queryArray {
+        // pair 文字列は既に urlEncoded 済み
+        parameterArray.append(pair)
       }
     }
     parameterArray = parameterArray.sorted { $0 < $1 }
@@ -342,6 +355,7 @@ public typealias OAuthAuthenticationHandler = (URL?, Error?) -> Void
 extension OAuth
 {
   public func requestCredentials(handler: @escaping OAuthAuthenticationHandler) {
+    credential = OAuthCredential() // XXX: 手っ取り早い初期化
     switch self.configuration.serviceType {
       case .facebook:
         requestFacebookCredentials(handler: handler)
@@ -504,7 +518,7 @@ extension OAuth
 // MARK: - 
 extension URL
 {
-  var baseURLString: String {
+  var baseStringURIString: String {
     var array = [String]()
     if let scheme = self.scheme {
       array.append(scheme)
@@ -518,6 +532,10 @@ extension URL
     }
     array.append(path)
     return array.joined()
+  }
+
+  var baseStringURI: URL {
+    return URL(string: self.baseStringURIString)!
   }
 }
 
@@ -540,7 +558,7 @@ extension String
         parameters.append(queryItem)
       }
     }
-    return parameters.count > 0 ? parameters : nil
+    return parameters.isEmpty ? nil : parameters
   }
 }
 

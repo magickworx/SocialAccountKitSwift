@@ -3,7 +3,7 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Tue, Oct 10 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -142,11 +142,10 @@ extension SAKSignInViewController: WKNavigationDelegate
   fileprivate func handleTwitterSignIn(requestURL: URL, callbackURL: URL) {
     let urlString = callbackURL.absoluteString
     if urlString.hasPrefix(callback) {
-      self.dismiss(animated: true, completion: {
-        NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
-            OAuthAuthenticateCallbackURLKey: callbackURL
-        ])
-      })
+      NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
+        OAuthAuthenticateCallbackURLKey: callbackURL
+      ])
+      self.dismiss(animated: true, completion: nil)
     }
     else {
       switch state {
@@ -155,7 +154,7 @@ extension SAKSignInViewController: WKNavigationDelegate
             state = .request
           }
         case .request: // username と password 付きリクエスト
-          if requestURL.baseURLString == callbackURL.baseURLString {
+          if requestURL.baseStringURIString == callbackURL.baseStringURIString {
             state = .authorize
           }
         case .authorize: // 認証失敗
@@ -172,12 +171,11 @@ extension SAKSignInViewController: WKNavigationDelegate
    */
   fileprivate func handleFacebookSignIn(requestURL: URL, callbackURL: URL) {
     if let host = callbackURL.host, host == "www.facebook.com" {
-      if callbackURL.baseURLString == callback {
-        self.dismiss(animated: true, completion: {
-          NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
-              OAuthAuthenticateCallbackURLKey: callbackURL
-          ])
-        })
+      if callbackURL.baseStringURIString == callback {
+        NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
+          OAuthAuthenticateCallbackURLKey: callbackURL
+        ])
+        self.dismiss(animated: true, completion: nil)
       }
     }
   }

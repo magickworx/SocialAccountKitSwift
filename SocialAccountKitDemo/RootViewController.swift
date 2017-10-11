@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Mon, Oct  9 2017
+ * UPDATED:	Tue, Oct 10 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -221,8 +221,13 @@ extension RootViewController
           switch result {
             case .cancelled:
               print("cancelled")
-            case .done:
-              print("posted")
+            case .done(let json): // XXX: 'json' may be 'nil'.
+              if let json = json, let text = json["text"] as? String {
+                self.popup(title: "Successful", message: text)
+              }
+              else {
+                self.popup(title: "Successful", message: "Tweeted")
+              }
             case .error(let error):
               self.popup(title: "Error", message: error.localizedDescription)
           }
@@ -231,7 +236,7 @@ extension RootViewController
       }
     }
     else {
-      popup(title: "Notice", message: "Unavailable post feature.")
+      popup(title: "Notice", message: "Post feature is unavailable on \(accountType.description).")
     }
   }
 }
