@@ -1,6 +1,11 @@
 # SocialAccountKitSwift
 
-iOS 11 以降使えなくなった、Account.framework と Social.framework の代替フレームワーク。SocialAccountKit.framework を使えば、iOS 10.3 までと同じ感じで Twitter や Facebook の API にアクセスできるよ。
+iOS 11 以降使えなくなった、Account.framework と Social.framework の代替フレームワーク。
+SocialAccountKit.framework を使えば、iOS 10.3 までと同じ感じで Twitter や Facebook の API にアクセスできるよ。
+
+設計コンセプトは、「できるだけ楽して対応」だ。
+なので、接頭語の置き換えと若干の修正で対応できるように実装してみた。
+
 
 ## できること／できないこと
 
@@ -39,7 +44,7 @@ Twitter あるいは Facebook のサイトでアプリを登録し、API Key と
 
 ### Facebook
 
-1. [開発者向け Facebook](https://developers.facebook.com/) にページにアクセスする。
+1. [開発者向け Facebook](https://developers.facebook.com/) ページにアクセスする。
 2. 右上の **マイアプリ** から **新しいアプリを追加** を選択し、アプリを登録する。
 3. ダッシュボード画面の **アプリID** と **app secret** の文字列をコピーする。
 4. Xcode Project 内の Facebook.plist の AppID と AppSecret にペーストする。
@@ -82,7 +87,8 @@ Xcode の Build Target を SocialAccountKitDemo に変更して Build を実行�
 
 ![デモアプリ](screenshots/ss_demo_top.png "デモ画面")
 
-デモ画面の右上の **＋** でアカウントの登録と管理が可能。あとは、実際にアカウントを登録して、デモアプリを試してね。アカウント登録が問題なく完了すれば、タイムラインを見たり、投稿したりできるよ。
+デモ画面の右上の **＋** でアカウントの登録と管理が可能。あとは、実際にアカウントを登録して、デモアプリを試してね。
+アカウント登録が問題なく完了すれば、タイムラインを見たり、投稿したりできるよ。
 
 
 ## 自作アプリへの組み込み方法
@@ -93,14 +99,20 @@ Xcode の Build Target に SocialAccountKitFatBinary を指定して Build を�
 
 #### サクッと習得するには
 
-SocialAccountKitDemo を動作可能にしてから、SocialAccountKitDemo フォルダの RootViewController.swift のソースコードを見ながら、デモを操作してみよう。実装したい機能のコードが見つかるはず。
+1. SocialAccountKitDemo を動作可能にする。
+2. SocialAccountKitDemo フォルダの RootViewController.swift のソースコードを表示する。
+3. ソースコードを見ながら、デモを操作する。
+
+これでコードによるアプリの動作と、実装したい機能のコードが見つかるはずだ。
 
 
 ### アカウント管理
 
-iOS 11 よりも前は、iOS の設定アプリ内で Twitter や Facebook アカウントの管理ができた。iOS 11 以降は設定項目が無くなったので、アプリ側で管理する必要がある。
+iOS 11 よりも前は、iOS の設定アプリ内で Twitter や Facebook アカウントの管理ができた。
+iOS 11 以降は設定項目が無くなったので、アプリ側で管理する必要がある。
 
-SocialAccountKit.framework では、SAKAccoutViewController クラスを提供する。これを、次のようなソースコードを書いて呼び出す。
+SocialAccountKit.framework では、SAKAccoutViewController クラスを提供する。
+これを、次のようなソースコードを書いて呼び出す。
 
 ```Swift
   let accountType = SAKAccountType(.twitter)
@@ -111,9 +123,11 @@ SocialAccountKit.framework では、SAKAccoutViewController クラスを提供�
 ![アカウント管理画面](screenshots/ss_demo_manager.png "アカウント管理画面")
 
 
-### 管理アカウントへの操作
+### 管理アカウントへのアクセス
 
-SAKAccountViewController を使って登録したアカウントは、次の方法でアクセスできる。この例では、登録されている全ての Twitter アカウントを取得する。accounts 配列にアカウント情報が保存されるので、UIAlertController などを使ってアカウントの選択機能を提供できる。
+SAKAccountViewController を使って登録したアカウントは、次の方法でアクセスできる。
+この例では、登録されている全ての Twitter アカウントを取得する。
+accounts 配列にアカウント情報が保存されるので、UIAlertController などを使ってアカウントの選択機能を提供できる。
 
 
 ```Swift
@@ -135,7 +149,8 @@ SAKAccountViewController を使って登録したアカウントは、次の方�
 
 ### 投稿
 
-Twitter や Facebook に投稿する場合は、SAKComposeViewController クラスが利用可能だ。直接、API にアクセスする方法もあるが、このクラスを利用した方が便利かも。
+Twitter や Facebook に投稿する場合は、SAKComposeViewController クラスが利用可能だ。
+直接、API にアクセスする方法もあるが、このクラスを利用した方が便利かも。
 
 ```Swift
   let accountType = SAKAccountType(.twitter)
@@ -161,7 +176,9 @@ Twitter や Facebook に投稿する場合は、SAKComposeViewController クラ�
 
 ### Twitter / Facebook API へのアクセス
 
-Twitter や Facebook の API にアクセスには、以下のソースコードのように記述する。これは、Twitter の Home Timeline を取得する実装例だ。実際のソースコードはもっと長いので、SocialAccountKitDemo フォルダ内の RootViewController.swift の fetchHomeTimeline() を見てね。
+Twitter や Facebook の API にアクセスするには、以下のソースコードのように記述する。
+これは、Twitter の Home Timeline を取得する実装例だ。
+実際のソースコードはもっと長いので、SocialAccountKitDemo フォルダ内の RootViewController.swift の fetchHomeTimeline() を見てね。
 
 ```Swift
   let accountType = SAKAccountType(.twitter)
@@ -194,7 +211,7 @@ Twitter や Facebook の API にアクセスには、以下のソースコード
   }
 ```
 
-![Tiwtter Timeline 画面](screenshots/ss_demo_tiwtter.png "Twitter 画面")
+![Tiwtter Timeline 画面](screenshots/ss_demo_twitter.png "Twitter 画面")
 
 
 
