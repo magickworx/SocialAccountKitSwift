@@ -3,7 +3,7 @@
  * FILE:	ComposeViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Compose Tweet
  * DATE:	Sun, Oct  8 2017
- * UPDATED:	Wed, Oct 11 2017
+ * UPDATED:	Thu, Oct 12 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -154,11 +154,11 @@ public class SAKComposeViewController: UIViewController
     self.modalPresentationStyle = .custom // XXX: 背景の透明化を有効にする
   }
 
-  public convenience init(forAccountType type: SAKAccountType) {
+  public convenience init(for accountType: SAKAccountType) {
     self.init(nibName: nil, bundle: nil)
 
     defer {
-      self.accountType = type
+      self.accountType = accountType
     }
   }
 

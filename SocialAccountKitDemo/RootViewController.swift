@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Wed, Oct 11 2017
+ * UPDATED:	Thu, Oct 12 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -215,7 +215,7 @@ extension RootViewController
   @objc private func composeAction(_ sender: UIBarButtonItem) {
     if SAKComposeViewController.isAvailable(for: accountType) {
       autoreleasepool {
-        let viewController = SAKComposeViewController(forAccountType: accountType)
+        let viewController = SAKComposeViewController(for: accountType)
         viewController.completionHandler = {
           [unowned self] (result: SAKComposeViewControllerResult) -> Void in
           switch result {
