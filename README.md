@@ -29,7 +29,7 @@ Twitter あるいは Facebook のサイトでアプリを登録し、API Key と
 1. [Twitter Application Management](https://apps.twitter.com/) ページにアクセスする。
 2. **Create New App** を実行して、アプリケーションを登録する。
 3. **Keys and Access Tokens** タブを選択し、 **Consumer Key** と **Consumer Secret** の文字列をコピーする。
-4. Xcode Project 内の Twitter.plist の CosumerKey と ConsumerSecret にペーストする。
+4. Xcode Project 内の **Twitter.plist** の CosumerKey と ConsumerSecret にペーストする。
 
 ```Twitter.plist
 <plist version="1.0">
@@ -47,7 +47,7 @@ Twitter あるいは Facebook のサイトでアプリを登録し、API Key と
 1. [開発者向け Facebook](https://developers.facebook.com/) ページにアクセスする。
 2. 右上の **マイアプリ** から **新しいアプリを追加** を選択し、アプリを登録する。
 3. ダッシュボード画面の **アプリID** と **app secret** の文字列をコピーする。
-4. Xcode Project 内の Facebook.plist の AppID と AppSecret にペーストする。
+4. Xcode Project 内の **Facebook.plist** の AppID と AppSecret にペーストする。
 
 ```Facebook.plist
 <plist version="1.0">
@@ -71,8 +71,10 @@ Twitter あるいは Facebook のサイトでアプリを登録し、API Key と
 ```
 
 **Permissions** の値を調整したい場合は、[アクセス許可のリファレンス - Facebook ログイン](https://developers.facebook.com/docs/facebook-login/permissions) を参照してね。
+Permission の値は認証後に変更できないので気を付けよう。
+また、Facebook の承認が必要な値もあるので注意しよう。
 
-さらにもう一手間、認証設定をするよ。
+さらにもう一手間、 OAuth 認証の設定をするよ。
 
 1. プロダクト画面で **Facebook ログイン** を追加する。
 2. **クライアントOAuth設定** 画面を開く。
@@ -155,7 +157,7 @@ Twitter や Facebook に投稿する場合は、SAKComposeViewController クラ�
 ```Swift
   let accountType = SAKAccountType(.twitter)
   if SAKComposeViewController.isAvailable(for: accountType) {
-    let viewController = SAKComposeViewController(forAccountType: accountType)
+    let viewController = SAKComposeViewController(for: accountType)
     viewController.completionHandler = {
       [unowned self] (result: SAKComposeViewControllerResult) -> Void in
       switch result {
@@ -285,7 +287,7 @@ enum SAKAccountCredentialRenewResult
 - class func isAvailable(for accountType: SAKAccountType) -> Bool
 
 #### Initializer
-- init(forAccountType type: SAKAccountType)
+- init(for accountType: SAKAccountType)
 
 #### Properties
 - var completionHandler: SAKComposeViewControllerCompletionHandler
@@ -328,6 +330,11 @@ enum SAKRequestMethod: String
   case PUT    = "PUT"
 }
 ```
+
+
+## References
+
+Qiita の [SocialAccountKit を使った iOS 11 以降の Twitter と Facebook API へのアクセス](https://qiita.com/magickworx/items/49ca167802e3c65ad5a9) も見てね。
 
 
 ## Requirements
