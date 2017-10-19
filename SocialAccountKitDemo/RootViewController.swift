@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Thu, Oct 12 2017
+ * UPDATED:	Thu, Oct 19 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -260,6 +260,8 @@ extension RootViewController
   func fetchHomeTimeline(with account: SAKAccount) {
     if let requestURL = URL(string: "https://api.twitter.com/1.1/statuses/home_timeline.json") {
       let parameters: [String:Any] = [
+        "exclude_replies": true,
+        "include_entities" : false,
         "count" : 20
       ]
       do {

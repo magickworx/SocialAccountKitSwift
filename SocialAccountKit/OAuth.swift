@@ -3,7 +3,7 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Tue, Oct 10 2017
+ * UPDATED:	Thu, Oct 19 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -155,10 +155,7 @@ public class OAuth
     let glueCount = parameters.count - 1 // パラメータ間の '&' の個数
     let queryString: String = parameters.enumerated().reduce("") {
       (input, tuple) -> String in
-      var key = tuple.element.key
-      if let encodedKey = key.urlEncoded {
-        key = encodedKey
-      }
+      let key = tuple.element.key
       switch tuple.element.value {
         case let bool as Bool:
           return input + key + "=" + (bool ? "true" : "false")
@@ -167,11 +164,7 @@ public class OAuth
           return input + key + "=" + String(int)
                        + (glueCount > tuple.offset ? "&" : "")
         case let string as String:
-          var value = string
-          if let encodedValue = value.urlEncoded {
-            value = encodedValue
-          }
-          return input + key + "=" + value
+          return input + key + "=" + string
                        + (glueCount > tuple.offset ? "&" : "")
         default:
           return input
@@ -180,10 +173,21 @@ public class OAuth
 
     var request = URLRequest(url: url)
     if method == "GET" && !parameters.isEmpty {
-      var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-      components?.query = queryString
-      if let newURL = components?.url {
-        request = URLRequest(url: newURL)
+      if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+        components.query = queryString // 代入時に自動的に URL エンコードされる
+        /*
+         * XXX: 2017/10/19(Thu)
+         * query-string に ":" が含まれている場合 URL Encode されない。
+         * RFC 3986 では ":" は使用可能な文字であるので正しい動作である。
+         * しかし、":" が URL Encode されていないと、
+         * Twitter API Server 側で認証エラーを返す。
+         * signature の計算時のパラメータ処理で失敗しているのか？
+         * よって、強制的に query-string 内の ":" を "%3A" で置換する。
+         */
+        components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: ":", with: "%3A")
+        if let revisedURL = components.url {
+          request = URLRequest(url: revisedURL)
+        }
       }
     }
 
@@ -191,13 +195,19 @@ public class OAuth
     request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
     let authField = authorizationHttpField(with: method, url: url.baseStringURI, query: queryString.isEmpty ? nil : queryString)
     request.setValue(authField, forHTTPHeaderField: "Authorization")
-
     request.setValue("application/json", forHTTPHeaderField: "Accept")
+
     switch method {
       case "POST":
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         if !parameters.isEmpty {
-          request.httpBody = queryString.data(using: .utf8)
+          let encodedQuery = queryString.components(separatedBy: "&").map({
+            let pair = $0.components(separatedBy: "=")
+            guard let keyString = pair[0].urlEncoded,
+                  let valString = pair[1].urlEncoded else { return $0 }
+            return keyString + "=" + valString
+          }).joined(separator: "&")
+          request.httpBody = encodedQuery.data(using: .utf8)
           var length: Int = 0
           if let body = request.httpBody {
             length = body.count
@@ -279,7 +289,7 @@ public class OAuth
     // The HTTP request method (e.g., "GET", "POST", etc).
     signatureArray.append(method.uppercased())
 
-    // RFC 5849 Section 3.4.1.2
+    // Section 3.4.1.2 in RFC 5849
     if let urlString = url.baseStringURIString.urlEncoded {
       signatureArray.append(urlString)
     }
@@ -294,11 +304,15 @@ public class OAuth
       }
     }
 
-    if let query = query {
-      let queryArray = query.components(separatedBy: "&")
-      for pair in queryArray {
-        // pair 文字列は既に urlEncoded 済み
-        parameterArray.append(pair)
+    if let queryString = query {
+      let queryArray = queryString.components(separatedBy: "&")
+      for qstr in queryArray {
+        let pair = qstr.components(separatedBy: "=")
+        if let keyString = pair[0].urlEncoded,
+           let valString = pair[1].urlEncoded {
+          let line = String(format: "%@=%@", keyString, valString)
+          parameterArray.append(line)
+        }
       }
     }
     parameterArray = parameterArray.sorted { $0 < $1 }
@@ -543,6 +557,7 @@ extension URL
 // MARK: - 
 extension String
 {
+  // See "Section 3.6 Percent Encoding" in RFC 5849
   var urlEncoded: String? {
     let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
     return self.addingPercentEncoding(withAllowedCharacters: allowedCharacterSet)
