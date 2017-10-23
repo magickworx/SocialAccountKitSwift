@@ -3,7 +3,7 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Thu, Oct 19 2017
+ * UPDATED:	Sat, Oct 21 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -68,6 +68,7 @@ public enum OAuthConfigurationServiceType
   case standard
   case twitter
   case facebook
+  case appOnly
 }
 
 public protocol OAuthConfigurationProtocol
@@ -121,14 +122,21 @@ open class OAuthCredential
   }
 
   // MARK: - OAuth 2.0
-  public var oauth2Token: String? = nil
-  public var refreshToken: String? = nil
-  public var expiryDate: Date? = nil
+  public internal(set) var oauth2Token: String? = nil
+  public internal(set) var refreshToken: String? = nil
+  public internal(set) var expiryDate: Date? = nil
 
-  public var tokenType: String? = nil // "bearer", "mac", and so on
+  public internal(set) var tokenType: String? = nil // "bearer", "mac", and so on
 
   public convenience init(token: String, refresh: String? = nil, expiry: Date, type: String = "bearer") {
     self.init()
+    self.oauth2Token = token
+    self.refreshToken = refresh
+    self.expiryDate = expiry
+    self.tokenType = type
+  }
+
+  public func renew(token: String?, refresh: String? = nil, expiry: Date? = nil, type: String? = "bearer") {
     self.oauth2Token = token
     self.refreshToken = refresh
     self.expiryDate = expiry
@@ -241,6 +249,8 @@ public class OAuth
     switch configuration.serviceType {
       case .facebook:
         return oAuth2HeaderField()
+      case .appOnly:
+        return appOnlyAuthHeaderField()
       default:
         return oAuth1HeaderField(with: method, url: url, query: query)
     }
@@ -373,6 +383,8 @@ extension OAuth
     switch self.configuration.serviceType {
       case .facebook:
         requestFacebookCredentials(handler: handler)
+      case .appOnly:
+        requestAppOnlyCredentials(handler: handler)
       default:
         requestOAuthCredentials(handler: handler)
     }
@@ -417,27 +429,6 @@ extension OAuth
       }
     }
     return url
-  }
-
-  func requestFacebookCredentials(handler: @escaping OAuthAuthenticationHandler) {
-    if let configuration = self.configuration as? FacebookOAuthConfiguration {
-      // See https://developers.facebook.com/docs/facebook-login/permissions/
-      let scope = configuration.permissions.count > 0
-                ? configuration.permissions.joined(separator: ",")
-                : "public_profile"
-      let urlString = configuration.authorizationURI
-                    + "?response_type=code"
-                    + "&client_id=" + configuration.consumerKey
-                    + "&redirect_uri=" + configuration.callbackURI
-                    + "&scope=" + scope
-      if let url = URL(string: urlString) {
-        addNotification()
-        handler(url, nil)
-      }
-      else {
-        handler(nil, SAKError.UnconstructedURL(urlString))
-      }
-    }
   }
 
   func addNotification() {
@@ -626,11 +617,7 @@ fileprivate extension String
     var result = [CUnsignedChar](repeating: 0, count: digestLen)
     CCHmac(algorithm.HMACAlgorithm, keyStr!, keyLen, dataStr!, dataLen, &result)
     let hmacData: NSData = NSData(bytes: result, length: digestLen)
-#if     false
-    let hmacBase64 = hmacData.base64EncodedString(options: NSData.Base64EncodingOptions.lineLength76Characters)
-#else
-    let hmacBase64 = hmacData.base64EncodedString(options: NSData.Base64EncodingOptions.lineLength64Characters)
-#endif
+    let hmacBase64 = hmacData.base64EncodedString(options: [])
     return String(hmacBase64)
   }
 }

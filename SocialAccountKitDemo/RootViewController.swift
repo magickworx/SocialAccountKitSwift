@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Thu, Oct 19 2017
+ * UPDATED:	Mon, Oct 23 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -55,10 +55,17 @@ class RootViewController: BaseViewController
 
   var accountType = SAKAccountType(.twitter)
 
+  let signInService = SAKSignInService(accountType: SAKAccountType(.appOnly), errorHandler: {
+    (error) in
+    dump(error)
+  })
+
   override func setup() {
     super.setup()
 
     self.title = "SocialAccountKitDemo"
+
+    setAppOnlyAccount()
   }
 
   override func didReceiveMemoryWarning() {
@@ -111,6 +118,18 @@ private extension RootViewController
       }
     })
   }
+
+  func setAppOnlyAccount() {
+    if let accountType = signInService.accountType {
+      store.requestAccessToAccounts(with: accountType, completion: {
+        [unowned self] (granted: Bool, error: Error?) in
+        guard granted, error == nil else { return }
+        if let accounts = self.store.accounts(with: accountType), accounts.count == 0 {
+          self.signInService.signIn()
+        }
+      })
+    }
+  }
 }
 
 extension RootViewController
@@ -144,7 +163,8 @@ extension RootViewController
               self.fetchHomeTimeline(with: account)
             case .facebook:
               self.fetchFeed(with: account)
-              break
+            case .appOnly:
+              self.fetchUserTimeline(with: account)
             default:
               break
           }
@@ -173,7 +193,7 @@ extension RootViewController
 extension RootViewController
 {
   fileprivate func makeToolbar() {
-    let services = [ "Twitter", "Facebook" ]
+    let services = [ "Twitter", "Facebook", "AppOnly" ]
     let segmentedControl = UISegmentedControl(items: services)
     segmentedControl.selectedSegmentIndex = 0
     segmentedControl.addTarget(self, action: #selector(serviceChanged), for: .valueChanged)
@@ -204,6 +224,8 @@ extension RootViewController
         accountType = SAKAccountType(.twitter)
       case 1:
         accountType = SAKAccountType(.facebook)
+      case 2:
+        accountType = SAKAccountType(.appOnly)
       default:
         break
     }
@@ -339,6 +361,68 @@ extension RootViewController
                        let timestamp = entity["created_time"] {
                       let text = "\(message)\n\(timestamp)"
                       self.tableData.append(text)
+                    }
+                  }
+                  DispatchQueue.main.async { [unowned self] in
+                    self.tableView.reloadData()
+                    if self.tableData.count > 0 {
+                      let indexPath = IndexPath(row: 0, section: 0)
+                      self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)
+                    }
+                  }
+                }
+                else {
+                  dump(data)
+                }
+              }
+              catch let error {
+                self.popup(title: "Parse Error", message: error.localizedDescription)
+              }
+            }
+            else {
+              print("Status code is \(httpResponse.statusCode)")
+              let responseString = String(data: data, encoding: .utf8)
+              dump(responseString)
+            }
+          }
+        })
+      }
+      catch let error {
+        self.popup(title: "Request Error", message: error.localizedDescription)
+      }
+    }
+  }
+}
+
+extension RootViewController
+{
+  func fetchUserTimeline(with account: SAKAccount) {
+    if let requestURL = URL(string: "https://api.twitter.com/1.1/statuses/user_timeline.json") {
+      let parameters: [String:Any] = [
+        "screen_name": "iphone_dev_jp",
+        "exclude_replies": true,
+        "include_rts": false,
+        "count" : 50
+      ]
+      do {
+        let request = try SAKRequest(forAccount: account, requestMethod: .GET, url: requestURL, parameters: parameters)
+        request.perform(handler: {
+          [unowned self] (data, response, error) in
+          guard error == nil, let data = data else {
+            self.popup(title: "Error", message: error!.localizedDescription)
+            return
+          }
+          self.tableData.removeAll()
+          if let httpResponse = response as? HTTPURLResponse {
+            if httpResponse.statusCode == 200 {
+              do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [Dictionary<String,Any>] {
+                  for entity: [String:Any] in json {
+                    if let text = entity["text"] as? String,
+                       let user = entity["user"] as? [String:Any],
+                       let name = user["screen_name"] as? String {
+                      let tweet = "@\(name)\n\(text)"
+                      self.tableData.append(tweet)
                     }
                   }
                   DispatchQueue.main.async { [unowned self] in

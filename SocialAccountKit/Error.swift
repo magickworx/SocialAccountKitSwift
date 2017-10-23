@@ -3,7 +3,7 @@
  * FILE:	Error.swift
  * DESCRIPTION:	SocialAccountKit: Account Error
  * DATE:	Mon, Sep 25 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Mon, Oct 23 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -79,8 +79,11 @@ public enum SAKError: LocalizedError
 
   case FailedServerResponse(Int, Data)
   case SendRequestError(Error)
+  case UnsupportedAccountType(String)
 
   case OAuthConfigurationError(Error)
+  case OAuthConfigurationUnprepared(String)
+  case OAuthAuthenticationFailed(String)
 }
 
 extension SAKError: CustomStringConvertible
@@ -166,9 +169,15 @@ extension SAKError: CustomStringConvertible
 
       case .SendRequestError(let error):
         return "Request had an error.\n\(error.localizedDescription)"
+      case .UnsupportedAccountType(let type):
+        return "Request wasn't sent because the account type \"\(type)\" is unsupported."
 
       case .OAuthConfigurationError(let error):
         return "Failed to read configuration parameters.\n\(error.localizedDescription)"
+      case .OAuthConfigurationUnprepared(let text):
+        return text
+      case .OAuthAuthenticationFailed(let text):
+        return text
     }
   }
 

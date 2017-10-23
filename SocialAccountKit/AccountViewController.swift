@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Mon, Oct  9 2017
+ * UPDATED:	Mon, Oct 23 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -69,18 +69,22 @@ class AccountViewController: UIViewController
   var tableView: UITableView = UITableView()
   var tableData: [SAKAccount] = []
 
+  var isCreatable: Bool = false // Can I create new account?
+
   var accountType: SAKAccountType? = nil {
     didSet {
-      if let type = accountType {
-        switch type.identifier {
+      if let accountType = accountType {
+        switch accountType.identifier {
           case .twitter:
             let configuration = TwitterOAuthConfiguration()
             oauth = OAuth(configuration)
+            isCreatable = true
           case .facebook:
             let configuration = FacebookOAuthConfiguration()
             oauth = OAuth(configuration)
-            break
+            isCreatable = true
           default:
+            isCreatable = false
             break
         }
       }
@@ -187,6 +191,11 @@ extension AccountViewController
 
     self.navigationItem.leftBarButtonItem?.isEnabled = !editing
 
+    if !isCreatable {
+      tableView.setEditing(editing, animated: animated)
+      return
+    }
+
     let section = 0
     let row = tableData.count
     let indexPath = IndexPath(row: row, section: section)
@@ -214,7 +223,7 @@ extension AccountViewController: UITableViewDataSource
   }
 
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return tableData.count + (tableView.isEditing ? 1 : 0)
+    return tableData.count + (tableView.isEditing && isCreatable ? 1 : 0)
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

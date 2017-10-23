@@ -3,7 +3,7 @@
  * FILE:	AccountStore.swift
  * DESCRIPTION:	SocialAccountKit: Manipulating and storing accounts.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Mon, Oct 23 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -325,7 +325,7 @@ extension SAKAccountStore
 
   public func requestAccessToAccounts(with accountType: SAKAccountType, options: Dictionary<String,String>? = nil, completion: @escaping SAKAccountStoreRequestAccessCompletionHandler) {
     switch accountType.identifier {
-      case .twitter, .facebook:
+      case .twitter, .facebook, .appOnly:
         completion(true, nil)
       default:
         completion(false, SAKError.AccountTypeInvalid)

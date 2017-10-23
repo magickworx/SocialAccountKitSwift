@@ -34,6 +34,7 @@
 		B3020F041F808F63001C2745 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3020F031F808F63001C2745 /* AppDelegate.swift */; };
 		B3020F0B1F808F63001C2745 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3020F0A1F808F63001C2745 /* Assets.xcassets */; };
 		B3020F0E1F808F63001C2745 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B3020F0C1F808F63001C2745 /* LaunchScreen.storyboard */; };
+		B334AB871F9D81C50033181A /* SignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B334AB861F9D81C40033181A /* SignInService.swift */; };
 		B363254D1F81F2F800183AD2 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B363254C1F81F2F800183AD2 /* BaseViewController.swift */; };
 		B363254F1F81F2FF00183AD2 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B363254E1F81F2FF00183AD2 /* RootViewController.swift */; };
 		B36325501F81FEB300183AD2 /* SocialAccountKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKit.framework */; };
@@ -41,6 +42,8 @@
 		B36325581F825F8B00183AD2 /* Twitter.plist in Resources */ = {isa = PBXBuildFile; fileRef = B36325571F825F8B00183AD2 /* Twitter.plist */; };
 		B36C38461F6BFF2E004912AB /* SocialAccountKit.h in Headers */ = {isa = PBXBuildFile; fileRef = B36C38441F6BFF2E004912AB /* SocialAccountKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B37D19461F8B983A00E949CE /* ComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37D19451F8B983A00E949CE /* ComposeViewController.swift */; };
+		B3D8602E1F9B42C800E06984 /* AppOnlyAuthCredential.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8602C1F9B42C700E06984 /* AppOnlyAuthCredential.swift */; };
+		B3D8602F1F9B42C800E06984 /* AppOnlyAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8602D1F9B42C700E06984 /* AppOnlyAuthConfiguration.swift */; };
 		B3E3F4611F86F9E600005F15 /* TwitterOAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E3F45F1F86F9E500005F15 /* TwitterOAuthConfiguration.swift */; };
 		B3E3F4621F86F9E600005F15 /* TwitterOAuthCredential.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E3F4601F86F9E600005F15 /* TwitterOAuthCredential.swift */; };
 		B3E3F4651F86F9EE00005F15 /* FacebookOAuthCredential.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E3F4631F86F9EE00005F15 /* FacebookOAuthCredential.swift */; };
@@ -87,6 +90,7 @@
 		B3020F0A1F808F63001C2745 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B3020F0D1F808F63001C2745 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B3020F0F1F808F63001C2745 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B334AB861F9D81C40033181A /* SignInService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignInService.swift; sourceTree = "<group>"; };
 		B363254C1F81F2F800183AD2 /* BaseViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 		B363254E1F81F2FF00183AD2 /* RootViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		B36325571F825F8B00183AD2 /* Twitter.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Twitter.plist; sourceTree = "<group>"; };
@@ -94,6 +98,8 @@
 		B36C38441F6BFF2E004912AB /* SocialAccountKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocialAccountKit.h; sourceTree = "<group>"; };
 		B36C38451F6BFF2E004912AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B37D19451F8B983A00E949CE /* ComposeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComposeViewController.swift; sourceTree = "<group>"; };
+		B3D8602C1F9B42C700E06984 /* AppOnlyAuthCredential.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppOnlyAuthCredential.swift; sourceTree = "<group>"; };
+		B3D8602D1F9B42C700E06984 /* AppOnlyAuthConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppOnlyAuthConfiguration.swift; sourceTree = "<group>"; };
 		B3E3F45F1F86F9E500005F15 /* TwitterOAuthConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwitterOAuthConfiguration.swift; sourceTree = "<group>"; };
 		B3E3F4601F86F9E600005F15 /* TwitterOAuthCredential.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwitterOAuthCredential.swift; sourceTree = "<group>"; };
 		B3E3F4631F86F9EE00005F15 /* FacebookOAuthCredential.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FacebookOAuthCredential.swift; sourceTree = "<group>"; };
@@ -156,6 +162,9 @@
 		B36C38431F6BFF2E004912AB /* SocialAccountKit */ = {
 			isa = PBXGroup;
 			children = (
+				B334AB861F9D81C40033181A /* SignInService.swift */,
+				B3D8602D1F9B42C700E06984 /* AppOnlyAuthConfiguration.swift */,
+				B3D8602C1F9B42C700E06984 /* AppOnlyAuthCredential.swift */,
 				B37D19451F8B983A00E949CE /* ComposeViewController.swift */,
 				B3E3F4641F86F9EE00005F15 /* FacebookOAuthConfiguration.swift */,
 				B3E3F4631F86F9EE00005F15 /* FacebookOAuthCredential.swift */,
@@ -338,18 +347,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B334AB871F9D81C50033181A /* SignInService.swift in Sources */,
 				B3020EF01F808A56001C2745 /* AccountType.swift in Sources */,
 				B3020EF21F808A56001C2745 /* AccountCredential.swift in Sources */,
 				B3020EE61F808A31001C2745 /* Error.swift in Sources */,
 				B3020EF11F808A56001C2745 /* AccountStore.swift in Sources */,
 				B3E3F4611F86F9E600005F15 /* TwitterOAuthConfiguration.swift in Sources */,
 				B3020EEE1F808A56001C2745 /* Account.swift in Sources */,
+				B3D8602F1F9B42C800E06984 /* AppOnlyAuthConfiguration.swift in Sources */,
 				B3020EE81F808A47001C2745 /* Request.swift in Sources */,
 				B3E3F4661F86F9EE00005F15 /* FacebookOAuthConfiguration.swift in Sources */,
 				B3020EE41F808A26001C2745 /* OAuth.swift in Sources */,
 				B3020EF61F808A65001C2745 /* SignInViewController.swift in Sources */,
 				B3E3F4621F86F9E600005F15 /* TwitterOAuthCredential.swift in Sources */,
 				B3E3F4651F86F9EE00005F15 /* FacebookOAuthCredential.swift in Sources */,
+				B3D8602E1F9B42C800E06984 /* AppOnlyAuthCredential.swift in Sources */,
 				B3020EF41F808A5D001C2745 /* AccountViewController.swift in Sources */,
 				B37D19461F8B983A00E949CE /* ComposeViewController.swift in Sources */,
 			);

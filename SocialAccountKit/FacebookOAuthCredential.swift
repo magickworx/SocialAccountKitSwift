@@ -3,7 +3,7 @@
  * FILE:	FacebookOAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentials for Facebook
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Sat, Oct 21 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -53,6 +53,27 @@ fileprivate typealias FacebookRequestHandler = (Data) -> Void
 
 extension OAuth
 {
+  func requestFacebookCredentials(handler: @escaping OAuthAuthenticationHandler) {
+    if let configuration = self.configuration as? FacebookOAuthConfiguration {
+      // See https://developers.facebook.com/docs/facebook-login/permissions/
+      let scope = configuration.permissions.count > 0
+                ? configuration.permissions.joined(separator: ",")
+                : "public_profile"
+      let urlString = configuration.authorizationURI
+                    + "?response_type=code"
+                    + "&client_id=" + configuration.consumerKey
+                    + "&redirect_uri=" + configuration.callbackURI
+                    + "&scope=" + scope
+      if let url = URL(string: urlString) {
+        addNotification()
+        handler(url, nil)
+      }
+      else {
+        handler(nil, SAKError.UnconstructedURL(urlString))
+      }
+    }
+  }
+
   func obtainFacebookAccessToken(with callbackURL: URL) {
     guard let code = callbackURL.query else { return }
     let urlString = self.configuration.accessTokenURI
@@ -77,9 +98,7 @@ extension OAuth
            let   tokenType = json["token_type"] as? String,
            let   expiresIn = json["expires_in"] as? TimeInterval {
           let expiry = Date(timeIntervalSinceNow: expiresIn)
-          credential.oauth2Token = accessToken
-          credential.expiryDate = expiry
-          credential.tokenType = tokenType.lowercased()
+          credential.renew(token: accessToken, expiry: expiry, type: tokenType.lowercased())
           verifyFacebookCredential()
         }
       }

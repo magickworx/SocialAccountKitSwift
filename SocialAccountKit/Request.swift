@@ -3,7 +3,7 @@
  * FILE:	Request.swift
  * DESCRIPTION:	SocialAccountKit: Request Wrapper
  * DATE:	Thu, Sep 21 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Mon, Oct 23 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -85,8 +85,15 @@ public struct SAKRequest
           throw SAKError.CredentialItemNotFound
         }
         credential = FacebookCredential(token: token, expiry: expiry)
+      case .appOnly:
+        configuration = AppOnlyAuthConfiguration()
+        guard let ac = account.credential,
+              let token = ac.oAuth2Token, let expiry = ac.expiryDate else {
+          throw SAKError.CredentialItemNotFound
+        }
+        credential = AppOnlyCredential(token: token, expiry: expiry)
       default:
-        throw SAKError.AccountTypeInvalid
+        throw SAKError.UnsupportedAccountType(account.accountType.description)
     }
     oauth = OAuth(configuration, credential: credential)
   }
