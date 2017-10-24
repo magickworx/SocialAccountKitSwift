@@ -3,7 +3,7 @@
  * FILE:	Request.swift
  * DESCRIPTION:	SocialAccountKit: Request Wrapper
  * DATE:	Thu, Sep 21 2017
- * UPDATED:	Mon, Oct 23 2017
+ * UPDATED:	Sat, Oct  7 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/

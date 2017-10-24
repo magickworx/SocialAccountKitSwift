@@ -3,7 +3,7 @@
  * FILE:	AppOnlyAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentails for App-only of Twitter
  * DATE:	Fri, Oct 20 2017
- * UPDATED:	Fri, Oct 20 2017
+ * UPDATED:	Tue, Oct 24 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -49,7 +49,7 @@ public class AppOnlyCredential: OAuthCredential
 
   public var appName: String {
     guard let name = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String else {
-      return "AppOnly(Twitter)"
+      return "Twitter (AppOnly)"
     }
     return name
   }

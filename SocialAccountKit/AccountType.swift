@@ -3,7 +3,7 @@
  * FILE:	AccountType.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates info about particular type.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Sat, Oct 21 2017
+ * UPDATED:	Tue, Oct 24 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -58,7 +58,7 @@ extension SAKServiceTypeIdentifier: CustomStringConvertible
       case .twitter:   return "Twitter"
       case .facebook:  return "Facebook"
       case .instagram: return "Instagram"
-      case .appOnly:   return "Twitter" // XXX: Twitter.plist を使うため
+      case .appOnly:   return "Twitter (AppOnly)"
     }
   }
 }
@@ -95,5 +95,14 @@ extension SAKAccountType: CustomStringConvertible
 {
   public var description: String {
     return identifier.description
+  }
+
+  public var serviceName: String {
+    switch identifier {
+      case .twitter:   return "Twitter"
+      case .facebook:  return "Facebook"
+      case .instagram: return "Instagram"
+      case .appOnly:   return "Twitter"
+    }
   }
 }

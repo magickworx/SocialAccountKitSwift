@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Mon, Oct 23 2017
+ * UPDATED:	Tue, Oct 24 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -125,7 +125,12 @@ private extension RootViewController
         [unowned self] (granted: Bool, error: Error?) in
         guard granted, error == nil else { return }
         if let accounts = self.store.accounts(with: accountType), accounts.count == 0 {
-          self.signInService.signIn()
+          self.signInService.signIn(completion: {
+            (success) in
+            if success {
+              print("Ok. You should enable UIs interaction on your app.")
+            }
+          })
         }
       })
     }
@@ -282,7 +287,7 @@ extension RootViewController
   func fetchHomeTimeline(with account: SAKAccount) {
     if let requestURL = URL(string: "https://api.twitter.com/1.1/statuses/home_timeline.json") {
       let parameters: [String:Any] = [
-        "exclude_replies": true,
+        "exclude_replies": false,
         "include_entities" : false,
         "count" : 20
       ]

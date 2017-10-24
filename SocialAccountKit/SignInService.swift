@@ -3,7 +3,7 @@
  * FILE:	SignInService.swift
  * DESCRIPTION:	SocialAccountKit: Sign In Service Class
  * DATE:	Sat, Oct 21 2017
- * UPDATED:	Mon, Oct 23 2017
+ * UPDATED:	Tue, Oct 24 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -43,6 +43,7 @@
 import Foundation
 import UIKit
 
+public typealias SAKSignInServiceCompletionHandler = (Bool) -> Void
 public typealias SAKSignInServiceErrorHandler = (Error) -> Void
 
 public class SAKSignInService: NSObject
@@ -71,6 +72,7 @@ public class SAKSignInService: NSObject
 
   var oauth: OAuth? = nil
   var errorHandler: SAKSignInServiceErrorHandler? = nil
+  var completionHandler: SAKSignInServiceCompletionHandler? = nil
 
   public convenience init(accountType: SAKAccountType, errorHandler: SAKSignInServiceErrorHandler? = nil) {
     self.init()
@@ -162,8 +164,13 @@ extension SAKSignInService
         break
     }
     accountStore.saveAccount(account, withCompletionHandler: {
-      (success, error) in
-      guard success, error == nil else { return }
+      [unowned self] (success, error) in
+      if let completionHandler = self.completionHandler {
+        completionHandler(success)
+      }
+      if !success {
+        self.handleError(error)
+      }
     })
   }
 
@@ -183,6 +190,7 @@ extension SAKSignInService
 extension SAKSignInService
 {
   public func signIn(contentController: UIViewController) {
+    self.completionHandler = nil // XXX: Clear
     guard let oauth = self.oauth, oauth.configuration.isReady else {
       configurationUnprepared()
       return
@@ -219,12 +227,13 @@ extension SAKSignInService
     })
   }
 
-  public func signIn() {
+  public func signIn(completion: @escaping SAKSignInServiceCompletionHandler) {
     guard let oauth = self.oauth, oauth.configuration.isReady else {
       configurationUnprepared()
       return
     }
     if let accountType = self.accountType, accountType.identifier == .appOnly {
+      self.completionHandler = completion
       oauth.requestCredentials(handler: {
         [unowned self] (url, error) in
         if url == nil && error == nil {
@@ -237,9 +246,20 @@ extension SAKSignInService
     }
   }
 
+  public func signOut(_ account: SAKAccount, completion: @escaping SAKSignInServiceCompletionHandler) {
+    self.completionHandler = nil // XXX: Clear
+    accountStore.removeAccount(account, withCompletionHandler: {
+      [unowned self] (success, error) in
+      completion(success)
+      if !success {
+        self.handleError(error)
+      }
+    })
+  }
+
   fileprivate func configurationUnprepared() {
     if let accountType = self.accountType {
-      let service = accountType.description
+      let service = accountType.serviceName
       let text: String
       switch accountType.identifier {
         case .twitter, .appOnly:

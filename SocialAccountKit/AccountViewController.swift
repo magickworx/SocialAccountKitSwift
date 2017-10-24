@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Mon, Oct 23 2017
+ * UPDATED:	Tue, Oct 24 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -427,7 +427,7 @@ extension AccountViewController
 
   func configurationUnprepared() {
     if let accountType = self.accountType {
-      let service = accountType.description
+      let service = accountType.serviceName
       let text: String
       switch accountType.identifier {
         case .twitter:

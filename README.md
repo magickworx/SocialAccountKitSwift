@@ -14,6 +14,7 @@ SocialAccountKit.framework を使えば、iOS 10.3 までと同じ感じで Twit
 - [x] 公開されている API に直接アクセスが可能
 - [x] **API Key** と **API Secret** を設定するだけの簡単導入
 - [x] 少ない修正で Account.framework と Social.framework から移行可能
+- [x] Twitter の [Application-only authentication](https://developer.twitter.com/en/docs/basics/authentication/overview/application-only) に対応 
 
 - [ ] 画像添付（開発者が API を直接アクセスするコードを実装すれば可能）
 - [ ] Facebook のトークン再発行
