@@ -3,7 +3,7 @@
  * FILE:	TwitterOAuthConfiguration.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Configuration for Twitter
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Wed, Oct 25 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -82,6 +82,9 @@ extension TwitterOAuthConfiguration
            let secret = dict["ConsumerSecret"] as? String {
           consumerKey = key
           consumerSecret = secret
+          if let cbURI = dict["CallbackURI"] as? String {
+            callbackURI = cbURI
+          }
         }
       }
       catch let error {

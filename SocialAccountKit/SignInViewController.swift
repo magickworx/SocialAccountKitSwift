@@ -3,7 +3,7 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Tue, Oct 10 2017
+ * UPDATED:	Wed, Oct 25 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -140,8 +140,9 @@ extension SAKSignInViewController: WKNavigationDelegate
   }
 
   fileprivate func handleTwitterSignIn(requestURL: URL, callbackURL: URL) {
-    let urlString = callbackURL.absoluteString
-    if urlString.hasPrefix(callback) {
+    let  requestURLString = requestURL.baseStringURIString
+    let callbackURLString = callbackURL.baseStringURIString
+    if callbackURLString == callback {
       NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
         OAuthAuthenticateCallbackURLKey: callbackURL
       ])
@@ -154,7 +155,7 @@ extension SAKSignInViewController: WKNavigationDelegate
             state = .request
           }
         case .request: // username と password 付きリクエスト
-          if requestURL.baseStringURIString == callbackURL.baseStringURIString {
+          if requestURLString == callbackURLString {
             state = .authorize
           }
         case .authorize: // 認証失敗
@@ -170,13 +171,11 @@ extension SAKSignInViewController: WKNavigationDelegate
    * https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/
    */
   fileprivate func handleFacebookSignIn(requestURL: URL, callbackURL: URL) {
-    if let host = callbackURL.host, host == "www.facebook.com" {
-      if callbackURL.baseStringURIString == callback {
-        NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
-          OAuthAuthenticateCallbackURLKey: callbackURL
-        ])
-        self.dismiss(animated: true, completion: nil)
-      }
+    if callbackURL.baseStringURIString == callback {
+      NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
+        OAuthAuthenticateCallbackURLKey: callbackURL
+      ])
+      self.dismiss(animated: true, completion: nil)
     }
   }
 }

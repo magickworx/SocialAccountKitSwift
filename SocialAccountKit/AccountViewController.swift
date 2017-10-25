@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Tue, Oct 24 2017
+ * UPDATED:	Wed, Oct 25 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -394,11 +394,11 @@ extension AccountViewController
         DispatchQueue.main.async { [unowned self] in
           autoreleasepool {
             let viewController = SAKSignInViewController(with: authenticateURL, accountType: accountType)
+            viewController.callback = oauth.configuration.callbackURI
             switch accountType.identifier {
               case .facebook:
 //                viewController.clearCache(in: "facebook.com")
                 viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
-                viewController.callback = oauth.configuration.callbackURI
               default:
                 break
             }

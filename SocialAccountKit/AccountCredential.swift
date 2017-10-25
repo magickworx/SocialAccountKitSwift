@@ -3,7 +3,7 @@
  * FILE:	AccountCredential.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates the info to authenticate a user
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Wed, Oct 25 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -45,8 +45,8 @@ import Foundation
 
 public struct SAKAccountCredential
 {
-  var oAuthToken: String! = nil
-  var tokenSecret: String! = nil
+  public internal(set) var oAuthToken: String! = nil
+  public internal(set) var tokenSecret: String! = nil
 
   // Initializes an account credential using OAuth.
   public init(oAuthToken: String, tokenSecret: String) {
@@ -54,11 +54,11 @@ public struct SAKAccountCredential
     self.tokenSecret = tokenSecret
   }
 
-  var oAuth2Token: String! = nil
-  var refreshToken: String! = nil
-  var expiryDate: Date! = nil
+  public internal(set) var oAuth2Token: String! = nil
+  public internal(set) var refreshToken: String! = nil
+  public internal(set) var expiryDate: Date! = nil
 
-  var tokenType: String? = nil
+  public internal(set) var tokenType: String? = nil
 
   // Initializes an account credential using OAuth 2.
   public init(oAuth2Token: String, refreshToken: String, expiryDate: Date, tokenType: String = "bearer") {
@@ -71,7 +71,7 @@ public struct SAKAccountCredential
 
 extension SAKAccountCredential
 {
-  // This property is only valid for OAuth2 credentials
+  // This property is only valid for OAuth2 credentials (for compatible ACAcountCredential)
   public var oauthToken: String! {
     return oAuth2Token
   }
@@ -80,14 +80,14 @@ extension SAKAccountCredential
 // MARK: - Convenience Methods for CoreData (AccountManager)
 extension SAKAccountCredential
 {
-  public var oauth1Info: Dictionary<String,String>? {
+  var oauth1Info: Dictionary<String,String>? {
     guard let token = oAuthToken, let secret = tokenSecret else {
       return nil
     }
     return [ "oauth_token": token, "oauth_token_secret": secret ]
   }
 
-  public var oauth2Info: Dictionary<String,Any>? {
+  var oauth2Info: Dictionary<String,Any>? {
     guard let token = oAuth2Token, let refresh = refreshToken, let expiry = expiryDate, let type = tokenType else { return nil }
     return [ "oauth_token": token, "refresh_token": refresh, "expiry_date": expiry, "token_type": type ]
   }

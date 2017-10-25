@@ -15,6 +15,7 @@ SocialAccountKit.framework を使えば、iOS 10.3 までと同じ感じで Twit
 - [x] **API Key** と **API Secret** を設定するだけの簡単導入
 - [x] 少ない修正で Account.framework と Social.framework から移行可能
 - [x] Twitter の [Application-only authentication](https://developer.twitter.com/en/docs/basics/authentication/overview/application-only) に対応 
+- [x] [Google Firebase のユーザ認証](https://firebase.google.com/docs/auth/?authuser=0) で利用可能（Twitter や Facebook の公式 SDK が不要）
 
 - [ ] 画像添付（開発者が API を直接アクセスするコードを実装すれば可能）
 - [ ] Facebook のトークン再発行
@@ -216,6 +217,53 @@ Twitter や Facebook の API にアクセスするには、以下のソースコ
 
 ![Tiwtter Timeline 画面](screenshots/ss_demo_twitter.png "Twitter 画面")
 
+
+## Google Firebase のユーザ認証での活用
+
+Twitter や Facebook の公式 SDK を導入しなくても、次のようなソースコードで Firebase の Authentication のユーザ認証に利用できる。例は Facebook の場合。
+
+```Swift:UIViewController
+{
+  let signInService = SAKSignInService(accountType: SAKAccountType(.facebook))
+
+  @objc func handleSignIn(_ sender: UIButton) {
+    signInService.signIn(contentController: self, completion: {
+      (successful, account, error) in
+      if successful, let token = account?.credential?.oauthToken {
+        let credential = FacebookAuthProvider.credential(withAccessToken: token)
+        Auth.auth().signIn(with: credential) {
+          (user: User?, error: Error?) in
+          if let error = error {
+            print(error.localizedDescription)
+            return
+          }
+          dump(user)
+        }
+      }
+      else {
+        dump(error)
+      }
+    })
+  }
+}
+```
+
+このとき、Facebook.plist に Firebase で指定された「 __OAuth リダイレクト URI__ 」を __CallbackURI__ キーで記述する。
+
+```Facebook.plist
+<plist version="1.0">
+<dict>
+  <key>AppID</key>
+  <string>YOUR APP ID</string>
+  <key>AppSecret</key>
+  <string>YOUR APP SECRET</string>
+  <key>CallbackURI</key>
+  <string>YOUR FIREBASE REDIRECT URI</string>
+</dict>
+</plist>
+```
+
+Twitter の場合も同様である。
 
 
 ## クラス一覧

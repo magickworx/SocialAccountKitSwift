@@ -3,7 +3,7 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Tue, Oct 24 2017
+ * UPDATED:	Wed, Oct 25 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -55,10 +55,7 @@ class RootViewController: BaseViewController
 
   var accountType = SAKAccountType(.twitter)
 
-  let signInService = SAKSignInService(accountType: SAKAccountType(.appOnly), errorHandler: {
-    (error) in
-    dump(error)
-  })
+  let signInService = SAKSignInService(accountType: SAKAccountType(.appOnly))
 
   override func setup() {
     super.setup()
@@ -126,9 +123,13 @@ private extension RootViewController
         guard granted, error == nil else { return }
         if let accounts = self.store.accounts(with: accountType), accounts.count == 0 {
           self.signInService.signIn(completion: {
-            (success) in
-            if success {
+            (successful, account, error) in
+            if successful {
               print("Ok. You should enable UIs interaction on your app.")
+              dump(account)
+            }
+            else {
+              dump(error)
             }
           })
         }

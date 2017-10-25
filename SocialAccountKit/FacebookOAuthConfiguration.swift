@@ -3,7 +3,7 @@
  * FILE:	FacebookOAuthConfiguration.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Configuration for Facebook
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Tue, Oct 24 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -83,6 +83,9 @@ extension FacebookOAuthConfiguration
           consumerSecret = secret
           if let scope = dict["Permissions"] as? Array<String> {
             permissions = scope
+          }
+          if let cbURI = dict["CallbackURI"] as? String {
+            callbackURI = cbURI
           }
         }
       }

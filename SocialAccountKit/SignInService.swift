@@ -3,7 +3,7 @@
  * FILE:	SignInService.swift
  * DESCRIPTION:	SocialAccountKit: Sign In Service Class
  * DATE:	Sat, Oct 21 2017
- * UPDATED:	Tue, Oct 24 2017
+ * UPDATED:	Wed, Oct 25 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -43,8 +43,7 @@
 import Foundation
 import UIKit
 
-public typealias SAKSignInServiceCompletionHandler = (Bool) -> Void
-public typealias SAKSignInServiceErrorHandler = (Error) -> Void
+public typealias SAKSignInServiceCompletionHandler = (Bool, SAKAccount?, Error?) -> Void
 
 public class SAKSignInService: NSObject
 {
@@ -71,15 +70,12 @@ public class SAKSignInService: NSObject
   let accountStore = SAKAccountStore.shared
 
   var oauth: OAuth? = nil
-  var errorHandler: SAKSignInServiceErrorHandler? = nil
   var completionHandler: SAKSignInServiceCompletionHandler? = nil
 
-  public convenience init(accountType: SAKAccountType, errorHandler: SAKSignInServiceErrorHandler? = nil) {
+  public convenience init(accountType: SAKAccountType) {
     self.init()
 
     addNotification()
-
-    self.errorHandler = errorHandler
 
     defer {
       self.accountType = accountType
@@ -164,12 +160,9 @@ extension SAKSignInService
         break
     }
     accountStore.saveAccount(account, withCompletionHandler: {
-      [unowned self] (success, error) in
+      [unowned self] (successful, error) in
       if let completionHandler = self.completionHandler {
-        completionHandler(success)
-      }
-      if !success {
-        self.handleError(error)
+        completionHandler(successful, account, error)
       }
     })
   }
@@ -189,8 +182,8 @@ extension SAKSignInService
 
 extension SAKSignInService
 {
-  public func signIn(contentController: UIViewController) {
-    self.completionHandler = nil // XXX: Clear
+  public func signIn(contentController: UIViewController, completion: @escaping SAKSignInServiceCompletionHandler) {
+    self.completionHandler = completion
     guard let oauth = self.oauth, oauth.configuration.isReady else {
       configurationUnprepared()
       return
@@ -213,10 +206,10 @@ extension SAKSignInService
         DispatchQueue.main.async {
           autoreleasepool {
             let viewController = SAKSignInViewController(with: authenticateURL, accountType: accountType)
+            viewController.callback = oauth.configuration.callbackURI
             switch accountType.identifier {
               case .facebook:
                 viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
-                viewController.callback = oauth.configuration.callbackURI
               default:
                 break
             }
@@ -249,11 +242,8 @@ extension SAKSignInService
   public func signOut(_ account: SAKAccount, completion: @escaping SAKSignInServiceCompletionHandler) {
     self.completionHandler = nil // XXX: Clear
     accountStore.removeAccount(account, withCompletionHandler: {
-      [unowned self] (success, error) in
-      completion(success)
-      if !success {
-        self.handleError(error)
-      }
+      (successful, error) in
+      completion(successful, account, error)
     })
   }
 
@@ -274,8 +264,8 @@ extension SAKSignInService
   }
 
   fileprivate func handleError(_ error: Error?) {
-    if let errorHandler = self.errorHandler, let error = error {
-      errorHandler(error)
+    if let completionHandler = self.completionHandler {
+      completionHandler(false, nil, error)
     }
   }
 }
