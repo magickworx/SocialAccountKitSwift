@@ -42,6 +42,9 @@
 		B36325581F825F8B00183AD2 /* Twitter.plist in Resources */ = {isa = PBXBuildFile; fileRef = B36325571F825F8B00183AD2 /* Twitter.plist */; };
 		B36C38461F6BFF2E004912AB /* SocialAccountKit.h in Headers */ = {isa = PBXBuildFile; fileRef = B36C38441F6BFF2E004912AB /* SocialAccountKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B37D19461F8B983A00E949CE /* ComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37D19451F8B983A00E949CE /* ComposeViewController.swift */; };
+		B3C965171FA22B8A00C13FD8 /* GitHub.plist in Resources */ = {isa = PBXBuildFile; fileRef = B3C965161FA22B8A00C13FD8 /* GitHub.plist */; };
+		B3C9651A1FA22B9900C13FD8 /* GitHubOAuthCredential.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C965181FA22B9800C13FD8 /* GitHubOAuthCredential.swift */; };
+		B3C9651B1FA22B9900C13FD8 /* GitHubOAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C965191FA22B9800C13FD8 /* GitHubOAuthConfiguration.swift */; };
 		B3D8602E1F9B42C800E06984 /* AppOnlyAuthCredential.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8602C1F9B42C700E06984 /* AppOnlyAuthCredential.swift */; };
 		B3D8602F1F9B42C800E06984 /* AppOnlyAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D8602D1F9B42C700E06984 /* AppOnlyAuthConfiguration.swift */; };
 		B3E3F4611F86F9E600005F15 /* TwitterOAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E3F45F1F86F9E500005F15 /* TwitterOAuthConfiguration.swift */; };
@@ -98,6 +101,9 @@
 		B36C38441F6BFF2E004912AB /* SocialAccountKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocialAccountKit.h; sourceTree = "<group>"; };
 		B36C38451F6BFF2E004912AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B37D19451F8B983A00E949CE /* ComposeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComposeViewController.swift; sourceTree = "<group>"; };
+		B3C965161FA22B8A00C13FD8 /* GitHub.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = GitHub.plist; sourceTree = "<group>"; };
+		B3C965181FA22B9800C13FD8 /* GitHubOAuthCredential.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GitHubOAuthCredential.swift; sourceTree = "<group>"; };
+		B3C965191FA22B9800C13FD8 /* GitHubOAuthConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GitHubOAuthConfiguration.swift; sourceTree = "<group>"; };
 		B3D8602C1F9B42C700E06984 /* AppOnlyAuthCredential.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppOnlyAuthCredential.swift; sourceTree = "<group>"; };
 		B3D8602D1F9B42C700E06984 /* AppOnlyAuthConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppOnlyAuthConfiguration.swift; sourceTree = "<group>"; };
 		B3E3F45F1F86F9E500005F15 /* TwitterOAuthConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwitterOAuthConfiguration.swift; sourceTree = "<group>"; };
@@ -137,6 +143,7 @@
 				B3020F0F1F808F63001C2745 /* Info.plist */,
 				B36325571F825F8B00183AD2 /* Twitter.plist */,
 				B3E3F4671F8766A200005F15 /* Facebook.plist */,
+				B3C965161FA22B8A00C13FD8 /* GitHub.plist */,
 			);
 			path = SocialAccountKitDemo;
 			sourceTree = "<group>";
@@ -162,6 +169,8 @@
 		B36C38431F6BFF2E004912AB /* SocialAccountKit */ = {
 			isa = PBXGroup;
 			children = (
+				B3C965191FA22B9800C13FD8 /* GitHubOAuthConfiguration.swift */,
+				B3C965181FA22B9800C13FD8 /* GitHubOAuthCredential.swift */,
 				B334AB861F9D81C40033181A /* SignInService.swift */,
 				B3D8602D1F9B42C700E06984 /* AppOnlyAuthConfiguration.swift */,
 				B3D8602C1F9B42C700E06984 /* AppOnlyAuthCredential.swift */,
@@ -288,6 +297,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B3020F0E1F808F63001C2745 /* LaunchScreen.storyboard in Resources */,
+				B3C965171FA22B8A00C13FD8 /* GitHub.plist in Resources */,
 				B36325581F825F8B00183AD2 /* Twitter.plist in Resources */,
 				B3E3F4681F8766A200005F15 /* Facebook.plist in Resources */,
 				B3020F0B1F808F63001C2745 /* Assets.xcassets in Resources */,
@@ -352,9 +362,11 @@
 				B3020EF21F808A56001C2745 /* AccountCredential.swift in Sources */,
 				B3020EE61F808A31001C2745 /* Error.swift in Sources */,
 				B3020EF11F808A56001C2745 /* AccountStore.swift in Sources */,
+				B3C9651A1FA22B9900C13FD8 /* GitHubOAuthCredential.swift in Sources */,
 				B3E3F4611F86F9E600005F15 /* TwitterOAuthConfiguration.swift in Sources */,
 				B3020EEE1F808A56001C2745 /* Account.swift in Sources */,
 				B3D8602F1F9B42C800E06984 /* AppOnlyAuthConfiguration.swift in Sources */,
+				B3C9651B1FA22B9900C13FD8 /* GitHubOAuthConfiguration.swift in Sources */,
 				B3020EE81F808A47001C2745 /* Request.swift in Sources */,
 				B3E3F4661F86F9EE00005F15 /* FacebookOAuthConfiguration.swift in Sources */,
 				B3020EE41F808A26001C2745 /* OAuth.swift in Sources */,

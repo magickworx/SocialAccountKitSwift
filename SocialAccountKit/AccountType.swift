@@ -3,7 +3,7 @@
  * FILE:	AccountType.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates info about particular type.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Tue, Oct 24 2017
+ * UPDATED:	Thu, Oct 26 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -47,7 +47,7 @@ public enum SAKServiceTypeIdentifier: Int32
 {
   case twitter
   case facebook
-  case instagram
+  case github
   case appOnly // for application-only authentication in Twitter
 }
 
@@ -55,10 +55,10 @@ extension SAKServiceTypeIdentifier: CustomStringConvertible
 {
   public var description: String {
     switch self {
-      case .twitter:   return "Twitter"
-      case .facebook:  return "Facebook"
-      case .instagram: return "Instagram"
-      case .appOnly:   return "Twitter (AppOnly)"
+      case .twitter:  return "Twitter"
+      case .facebook: return "Facebook"
+      case .github:   return "GitHub"
+      case .appOnly:  return "Twitter (AppOnly)"
     }
   }
 }
@@ -99,10 +99,10 @@ extension SAKAccountType: CustomStringConvertible
 
   public var serviceName: String {
     switch identifier {
-      case .twitter:   return "Twitter"
-      case .facebook:  return "Facebook"
-      case .instagram: return "Instagram"
-      case .appOnly:   return "Twitter"
+      case .twitter:  return "Twitter"
+      case .facebook: return "Facebook"
+      case .github:   return "GitHub"
+      case .appOnly:  return "Twitter"
     }
   }
 }

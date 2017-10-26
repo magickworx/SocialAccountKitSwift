@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Wed, Oct 25 2017
+ * UPDATED:	Thu, Oct 26 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -69,7 +69,7 @@ class AccountViewController: UIViewController
   var tableView: UITableView = UITableView()
   var tableData: [SAKAccount] = []
 
-  var isCreatable: Bool = false // Can I create new account?
+  var isCreatable: Bool = true // Can I create new account?
 
   var accountType: SAKAccountType? = nil {
     didSet {
@@ -78,14 +78,14 @@ class AccountViewController: UIViewController
           case .twitter:
             let configuration = TwitterOAuthConfiguration()
             oauth = OAuth(configuration)
-            isCreatable = true
           case .facebook:
             let configuration = FacebookOAuthConfiguration()
             oauth = OAuth(configuration)
-            isCreatable = true
+          case .github:
+            let configuration = GitHubOAuthConfiguration()
+            oauth = OAuth(configuration)
           default:
             isCreatable = false
-            break
         }
       }
     }
@@ -363,7 +363,16 @@ extension AccountViewController
           account.username = name
           account.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
         }
-        break
+      case .github:
+        if let credentials = credentials as? GitHubCredential,
+           let name = credentials.login,
+           let type = credentials.tokenType,
+           let token = credentials.oauth2Token,
+           let refresh = credentials.refreshToken,
+           let expiry = credentials.expiryDate {
+          account.username = name
+          account.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
+        }
       default:
         break
     }
@@ -399,6 +408,8 @@ extension AccountViewController
               case .facebook:
 //                viewController.clearCache(in: "facebook.com")
                 viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
+              case .github:
+                viewController.clearCache()
               default:
                 break
             }
@@ -434,6 +445,8 @@ extension AccountViewController
           text = "Confirm \(service).plist has set ConsumerKey and ConsumerSecret."
         case .facebook:
           text = "Confirm \(service).plist has set AppID and AppSecret."
+        case .github:
+          text = "Confirm \(service).plist has set ClientID and ClientSecret."
         default:
           text = "Unsupported service: \(service)"
           break

@@ -3,7 +3,7 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Wed, Oct 25 2017
+ * UPDATED:	Thu, Oct 26 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -52,10 +52,46 @@ public class SAKSignInViewController: UIViewController
   public internal(set) var requestURL: URL?
   public internal(set) var accountType: SAKAccountType?
 
-  enum SignInState {
+  enum SignInState: CustomStringConvertible {
     case ready
+    case start
     case request
-    case authorize
+    case authorizing
+    case authorized
+    case failed
+
+    mutating func next(_ requestURL: URL, _ nextURL: URL, _ callback: String) {
+      let requestBase = requestURL.baseStringURIString
+      let    nextBase = nextURL.baseStringURIString
+      switch self {
+        case .ready:
+          if  requestURL == nextURL  { self = .start }
+        case .start:
+          if requestBase == nextBase { self = .authorizing }
+          else                       { self = .request }
+        case .request:
+          if requestBase == nextBase { self = .authorizing }
+        case .authorizing:
+          if    nextBase == callback { self = .authorized }
+          else if requestBase == nextBase {}
+          else                       { self = .failed }
+        case .authorized:
+          break
+        case .failed:
+          break
+      }
+    }
+
+    var description: String {
+      switch self {
+        case .ready:       return "Ready"
+        case .start:       return "Start"
+        case .request:     return "Request"
+        case .authorizing: return "Authorizing"
+        case .authorized:  return "Authorized"
+        case .failed:      return "Failed"
+      }
+    }
   }
   var state: SignInState = .ready
 
@@ -132,6 +168,8 @@ extension SAKSignInViewController: WKNavigationDelegate
           handleTwitterSignIn(requestURL: requestURL, callbackURL: callbackURL)
         case .facebook:
           handleFacebookSignIn(requestURL: requestURL, callbackURL: callbackURL)
+        case .github:
+          handleGitHubSignIn(requestURL: requestURL, callbackURL: callbackURL)
         default:
           break
       }
@@ -140,29 +178,19 @@ extension SAKSignInViewController: WKNavigationDelegate
   }
 
   fileprivate func handleTwitterSignIn(requestURL: URL, callbackURL: URL) {
-    let  requestURLString = requestURL.baseStringURIString
-    let callbackURLString = callbackURL.baseStringURIString
-    if callbackURLString == callback {
-      NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
-        OAuthAuthenticateCallbackURLKey: callbackURL
-      ])
-      self.dismiss(animated: true, completion: nil)
-    }
-    else {
-      switch state {
-        case .ready: // token 付きリクエスト
-          if requestURL == callbackURL {
-            state = .request
-          }
-        case .request: // username と password 付きリクエスト
-          if requestURLString == callbackURLString {
-            state = .authorize
-          }
-        case .authorize: // 認証失敗
-          self.dismiss(animated: true, completion: {
-            NotificationCenter.default.post(name: .OAuthDidEndInFailure, object: nil, userInfo: nil)
-          })
-      }
+    state.next(requestURL, callbackURL, callback)
+    switch state {
+      case .authorized:
+        NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
+          OAuthAuthenticateCallbackURLKey: callbackURL
+        ])
+        self.dismiss(animated: true, completion: nil)
+      case .failed:
+        self.dismiss(animated: true, completion: {
+          NotificationCenter.default.post(name: .OAuthDidEndInFailure, object: nil, userInfo: nil)
+        })
+      default:
+        break
     }
   }
 
@@ -176,6 +204,28 @@ extension SAKSignInViewController: WKNavigationDelegate
         OAuthAuthenticateCallbackURLKey: callbackURL
       ])
       self.dismiss(animated: true, completion: nil)
+    }
+  }
+
+  fileprivate func handleGitHubSignIn(requestURL: URL, callbackURL: URL) {
+    state.next(requestURL, callbackURL, callback)
+#if DEBUG_FLOW
+    print("REQUEST:  " + requestURL.absoluteString)
+    print("CALLBACK: " + callbackURL.absoluteString)
+    print("[\(state.description)]")
+#endif // DEBUG
+    switch state {
+      case .authorized:
+        NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
+          OAuthAuthenticateCallbackURLKey: callbackURL
+        ])
+        self.dismiss(animated: true, completion: nil)
+      case .failed:
+        self.dismiss(animated: true, completion: {
+          NotificationCenter.default.post(name: .OAuthDidEndInFailure, object: nil, userInfo: nil)
+        })
+      default:
+        break
     }
   }
 }

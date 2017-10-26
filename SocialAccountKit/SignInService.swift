@@ -3,7 +3,7 @@
  * FILE:	SignInService.swift
  * DESCRIPTION:	SocialAccountKit: Sign In Service Class
  * DATE:	Sat, Oct 21 2017
- * UPDATED:	Wed, Oct 25 2017
+ * UPDATED:	Thu, Oct 26 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -47,6 +47,14 @@ public typealias SAKSignInServiceCompletionHandler = (Bool, SAKAccount?, Error?)
 
 public class SAKSignInService: NSObject
 {
+  /*
+   * Sign In 認証後に SAKAccountStore にアカウントを保存する。
+   * Google Firebase と連携する場合は、false が望ましいと思う。
+   * SAKAccountViewController 経由でアカウント作成をしない場合は、
+   * true を設定すると良い。
+   */
+  public var isStoreEnabled: Bool = false // true: AccountStore に保存する
+
   public internal(set) var accountType: SAKAccountType? = nil {
     didSet {
       if let accountType = accountType {
@@ -57,11 +65,12 @@ public class SAKSignInService: NSObject
           case .facebook:
             let configuration = FacebookOAuthConfiguration()
             oauth = OAuth(configuration)
+          case .github:
+            let configuration = GitHubOAuthConfiguration()
+            oauth = OAuth(configuration)
           case .appOnly:
             let configuration = AppOnlyAuthConfiguration()
             oauth = OAuth(configuration)
-          default:
-            break
         }
       }
     }
@@ -147,6 +156,16 @@ extension SAKSignInService
           account.username = name
           account.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
         }
+      case .github:
+        if let credentials = credentials as? GitHubCredential,
+           let name = credentials.login,
+           let type = credentials.tokenType,
+           let token = credentials.oauth2Token,
+           let refresh = credentials.refreshToken,
+           let expiry = credentials.expiryDate {
+          account.username = name
+          account.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
+        }
       case .appOnly:
         if let credentials = credentials as? AppOnlyCredential,
            let type = credentials.tokenType,
@@ -156,15 +175,20 @@ extension SAKSignInService
           account.username = credentials.appName
           account.credential = SAKAccountCredential(oAuth2Token: token, refreshToken: refresh, expiryDate: expiry, tokenType: type)
         }
-      default:
-        break
     }
-    accountStore.saveAccount(account, withCompletionHandler: {
-      [unowned self] (successful, error) in
+    if isStoreEnabled {
+      accountStore.saveAccount(account, withCompletionHandler: {
+        [unowned self] (successful, error) in
+        if let completionHandler = self.completionHandler {
+          completionHandler(successful, account, error)
+        }
+      })
+    }
+    else {
       if let completionHandler = self.completionHandler {
-        completionHandler(successful, account, error)
+        completionHandler(true, account, nil)
       }
-    })
+    }
   }
 
   @objc fileprivate func missCredentials(_ notification: Notification) {
@@ -210,6 +234,8 @@ extension SAKSignInService
             switch accountType.identifier {
               case .facebook:
                 viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
+              case .github:
+                viewController.clearCache()
               default:
                 break
             }
@@ -256,8 +282,12 @@ extension SAKSignInService
           text = "Confirm \(service).plist has set ConsumerKey and ConsumerSecret."
         case .facebook:
           text = "Confirm \(service).plist has set AppID and AppSecret."
+        case .github:
+          text = "Confirm \(service).plist has set ClientID and ClientSecret."
+        /*
         default:
           text = "Unsupported service: \(service)"
+          */
       }
       handleError(SAKError.OAuthConfigurationUnprepared(text))
     }

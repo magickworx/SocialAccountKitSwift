@@ -3,7 +3,7 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct 21 2017
+ * UPDATED:	Thu, Oct 26 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -68,6 +68,7 @@ public enum OAuthConfigurationServiceType
   case standard
   case twitter
   case facebook
+  case github
   case appOnly
 }
 
@@ -138,8 +139,12 @@ open class OAuthCredential
 
   public func renew(token: String?, refresh: String? = nil, expiry: Date? = nil, type: String? = "bearer") {
     self.oauth2Token = token
-    self.refreshToken = refresh
-    self.expiryDate = expiry
+    if refresh != nil {
+      self.refreshToken = refresh
+    }
+    if expiry != nil {
+      self.expiryDate = expiry
+    }
     self.tokenType = type
   }
 }
@@ -247,7 +252,7 @@ public class OAuth
 
   func authorizationHttpField(with method: String, url: URL, query: String?) -> String {
     switch configuration.serviceType {
-      case .facebook:
+      case .facebook, .github:
         return oAuth2HeaderField()
       case .appOnly:
         return appOnlyAuthHeaderField()
@@ -383,6 +388,8 @@ extension OAuth
     switch self.configuration.serviceType {
       case .facebook:
         requestFacebookCredentials(handler: handler)
+      case .github:
+        requestGitHubCredentials(handler: handler)
       case .appOnly:
         requestAppOnlyCredentials(handler: handler)
       default:
@@ -453,6 +460,8 @@ extension OAuth
       switch self.configuration.serviceType {
         case .facebook:
           obtainFacebookAccessToken(with: callbackURL)
+        case .github:
+          obtainGitHubAccessToken(with: callbackURL)
         default:
           obtainOAuthAccessToken(with: callbackURL)
       }
