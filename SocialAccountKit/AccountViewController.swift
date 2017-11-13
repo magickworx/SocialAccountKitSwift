@@ -3,7 +3,7 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Thu, Oct 26 2017
+ * UPDATED:	Mon, Nov 13 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -44,8 +44,21 @@
 import Foundation
 import UIKit
 
+public protocol SAKAccountViewControllerDelegate: class
+{
+  func accountViewController(canEdit account: SAKAccount) -> Bool
+}
+
 public class SAKAccountViewController: UINavigationController
 {
+  public weak var editDelegate: SAKAccountViewControllerDelegate? = nil {
+    didSet {
+      if let rvc = self.topViewController as? AccountViewController {
+        rvc.editDelegate = editDelegate
+      }
+    }
+  }
+
   required public init(coder aDecoder: NSCoder) {
     fatalError("NSCoding not supported")
   }
@@ -62,6 +75,8 @@ public class SAKAccountViewController: UINavigationController
 
 class AccountViewController: UIViewController
 {
+  public weak var editDelegate: SAKAccountViewControllerDelegate? = nil
+
   let accountStore = SAKAccountStore.shared
 
   var oauth: OAuth? = nil
@@ -182,7 +197,7 @@ extension AccountViewController
     }
   }
 
-  func closeAction(_ sender: UIBarButtonItem) {
+  @objc func closeAction(_ sender: UIBarButtonItem) {
     dismiss(animated: true, completion: nil)
   }
 
@@ -269,6 +284,12 @@ extension AccountViewController: UITableViewDelegate
   }
 
   func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+    if let editDelegate = self.editDelegate {
+      let row = indexPath.row
+      guard row != tableData.count else { return tableView.isEditing }
+      let account = tableData[row]
+      return editDelegate.accountViewController(canEdit: account)
+    }
     return tableView.isEditing
   }
 
@@ -334,7 +355,7 @@ extension AccountViewController
                           object: nil)
   }
 
-  func verfiyCredentials(_ notification: Notification) {
+  @objc func verfiyCredentials(_ notification: Notification) {
     guard let userInfo = notification.userInfo else { return }
     if let accountType = self.accountType,
        let credentials = userInfo[OAuthCredentialsKey] as? OAuthCredential {
@@ -405,11 +426,14 @@ extension AccountViewController
             let viewController = SAKSignInViewController(with: authenticateURL, accountType: accountType)
             viewController.callback = oauth.configuration.callbackURI
             switch accountType.identifier {
+              case .twitter:
+                viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "twitter.com")
               case .facebook:
 //                viewController.clearCache(in: "facebook.com")
                 viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
               case .github:
-                viewController.clearCache()
+                viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "github.com")
+                viewController.clearCache(in: "githubusercontent.com")
               default:
                 break
             }
@@ -425,14 +449,14 @@ extension AccountViewController
     })
   }
 
-  func missCredentials(_ notification: Notification) {
+  @objc func missCredentials(_ notification: Notification) {
     guard let userInfo = notification.userInfo else { return }
     if let error = userInfo[OAuthErrorInfoKey] as? Error {
       popup(title: "Error", message: error.localizedDescription)
     }
   }
 
-  func authorizationFailure(_ notification: Notification) {
+  @objc func authorizationFailure(_ notification: Notification) {
     popup(title: "Failure", message: "Failed to authorize account. Check username and password once again.")
   }
 

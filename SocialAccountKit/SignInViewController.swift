@@ -3,7 +3,7 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Thu, Oct 26 2017
+ * UPDATED:	Mon, Nov 13 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -262,7 +262,7 @@ public struct WebsiteDataType: OptionSet
 {
   public let rawValue: Int
 
-  static let allWebsiteData             = WebsiteDataType(rawValue: 1 << 0)
+  public static let allWebsiteData      = WebsiteDataType(rawValue: 1 << 0)
   static let diskCache                  = WebsiteDataType(rawValue: 1 << 1)
   static let memoryCache                = WebsiteDataType(rawValue: 1 << 2)
   static let offlineWebApplicationCache = WebsiteDataType(rawValue: 1 << 3)

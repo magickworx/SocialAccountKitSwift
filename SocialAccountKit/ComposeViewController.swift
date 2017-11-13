@@ -3,7 +3,7 @@
  * FILE:	ComposeViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Compose Tweet
  * DATE:	Sun, Oct  8 2017
- * UPDATED:	Thu, Oct 12 2017
+ * UPDATED:	Mon, Nov 13 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -202,7 +202,7 @@ public class SAKComposeViewController: UIViewController
                                  target: self,
                                  action: #selector(didTapCancel))
     cancelItem.setTitleTextAttributes([
-      NSForegroundColorAttributeName: self.view.tintColor
+      .foregroundColor: self.view.tintColor
     ], for: [])
     sheetItem.leftBarButtonItem = cancelItem
 
@@ -211,16 +211,16 @@ public class SAKComposeViewController: UIViewController
                                target: self,
                                action: #selector(didTapPost))
     postItem.setTitleTextAttributes([
-      NSForegroundColorAttributeName: self.view.tintColor
+      .foregroundColor: self.view.tintColor
     ], for: [])
     postItem.setTitleTextAttributes([
-      NSForegroundColorAttributeName: UIColor.lightGray
+      .foregroundColor: UIColor.lightGray
     ], for: [.disabled])
     sheetItem.rightBarButtonItem = postItem
 
     navigationBar.pushItem(sheetItem, animated: false)
     navigationBar.titleTextAttributes = [
-      NSForegroundColorAttributeName: UIColor.black
+      .foregroundColor: UIColor.black
     ]
     navigationBar.barTintColor = .white
     navigationBar.delegate = self
@@ -230,7 +230,7 @@ public class SAKComposeViewController: UIViewController
     }
     let backItem = UIBarButtonItem()
     backItem.setTitleTextAttributes([
-      NSForegroundColorAttributeName: self.view.tintColor
+      .foregroundColor: self.view.tintColor
     ], for: [])
     if let accountType = self.accountType {
       backItem.title = accountType.description
@@ -365,11 +365,11 @@ extension SAKComposeViewController
     }
   }
 
-  func didTapCancel(_ item: UIBarButtonItem) {
+  @objc func didTapCancel(_ item: UIBarButtonItem) {
     dismiss(with: .cancelled)
   }
 
-  func didTapPost(_ item: UIBarButtonItem) {
+  @objc func didTapPost(_ item: UIBarButtonItem) {
     if let accountType = self.accountType, let account = self.account,
        let text = textView.text {
       textView.resignFirstResponder()
@@ -464,7 +464,7 @@ extension SAKComposeViewController: UITextViewDelegate
   public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
     if let string = textView.text {
       let newText = string.replacingCharacters(in: range, with: text)
-      numberOfChars = newText.characters.count
+      numberOfChars = newText.count
     }
     return true
   }
@@ -472,7 +472,7 @@ extension SAKComposeViewController: UITextViewDelegate
   public func textViewDidBeginEditing(_ textView: UITextView) {
     if let text = textView.text {
       // XXX: 文字列の終端にカーソルを移動
-      let len = text.characters.count
+      let len = text.count
       textView.selectedRange = NSRange(location: len, length: 0)
     }
   }

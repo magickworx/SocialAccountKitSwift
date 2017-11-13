@@ -3,7 +3,7 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Thu, Oct 26 2017
+ * UPDATED:	Mon, Nov 13 2017
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
@@ -293,9 +293,16 @@ public class OAuth
     return oauthField
   }
 
+  /*
+   * swift3 - How can I use String slicing subscripts in Swift 4?
+   *        - Stack Overflow
+   * https://stackoverflow.com/questions/45562662/how-can-i-use-string-slicing-subscripts-in-swift-4
+   */
   func nonce() -> String {
     let uuid = UUID().uuidString
-    return uuid.substring(to: uuid.index(uuid.startIndex, offsetBy: 8))
+    let st = uuid.startIndex
+    let ed = uuid.index(uuid.startIndex, offsetBy: 8)
+    return String(uuid[st..<ed])
   }
 
   func signature(with method: String, url: URL, query: String?, parameters: [String:String]) -> String {
