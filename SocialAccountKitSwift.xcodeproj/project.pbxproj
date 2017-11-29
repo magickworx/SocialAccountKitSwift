@@ -37,8 +37,8 @@
 		B334AB871F9D81C50033181A /* SignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B334AB861F9D81C40033181A /* SignInService.swift */; };
 		B363254D1F81F2F800183AD2 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B363254C1F81F2F800183AD2 /* BaseViewController.swift */; };
 		B363254F1F81F2FF00183AD2 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B363254E1F81F2FF00183AD2 /* RootViewController.swift */; };
-		B36325501F81FEB300183AD2 /* SocialAccountKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKit.framework */; };
-		B36325511F81FEB300183AD2 /* SocialAccountKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B36325501F81FEB300183AD2 /* SocialAccountKitSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */; };
+		B36325511F81FEB300183AD2 /* SocialAccountKitSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B36325581F825F8B00183AD2 /* Twitter.plist in Resources */ = {isa = PBXBuildFile; fileRef = B36325571F825F8B00183AD2 /* Twitter.plist */; };
 		B36C38461F6BFF2E004912AB /* SocialAccountKit.h in Headers */ = {isa = PBXBuildFile; fileRef = B36C38441F6BFF2E004912AB /* SocialAccountKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B37D19461F8B983A00E949CE /* ComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37D19451F8B983A00E949CE /* ComposeViewController.swift */; };
@@ -71,7 +71,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B36325511F81FEB300183AD2 /* SocialAccountKit.framework in Embed Frameworks */,
+				B36325511F81FEB300183AD2 /* SocialAccountKitSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -97,7 +97,7 @@
 		B363254C1F81F2F800183AD2 /* BaseViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 		B363254E1F81F2FF00183AD2 /* RootViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		B36325571F825F8B00183AD2 /* Twitter.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Twitter.plist; sourceTree = "<group>"; };
-		B36C38421F6BFF2D004912AB /* SocialAccountKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SocialAccountKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SocialAccountKitSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B36C38441F6BFF2E004912AB /* SocialAccountKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocialAccountKit.h; sourceTree = "<group>"; };
 		B36C38451F6BFF2E004912AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B37D19451F8B983A00E949CE /* ComposeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComposeViewController.swift; sourceTree = "<group>"; };
@@ -118,7 +118,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B36325501F81FEB300183AD2 /* SocialAccountKit.framework in Frameworks */,
+				B36325501F81FEB300183AD2 /* SocialAccountKitSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,7 +160,7 @@
 		B36C38331F6B8C3E004912AB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B36C38421F6BFF2D004912AB /* SocialAccountKit.framework */,
+				B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */,
 				B3020F011F808F63001C2745 /* SocialAccountKitDemo.app */,
 			);
 			name = Products;
@@ -227,9 +227,9 @@
 			productReference = B3020F011F808F63001C2745 /* SocialAccountKitDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B36C38411F6BFF2D004912AB /* SocialAccountKit */ = {
+		B36C38411F6BFF2D004912AB /* SocialAccountKitSwift */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B36C38471F6BFF2E004912AB /* Build configuration list for PBXNativeTarget "SocialAccountKit" */;
+			buildConfigurationList = B36C38471F6BFF2E004912AB /* Build configuration list for PBXNativeTarget "SocialAccountKitSwift" */;
 			buildPhases = (
 				B36C383D1F6BFF2D004912AB /* Sources */,
 				B36C383E1F6BFF2D004912AB /* Frameworks */,
@@ -240,9 +240,9 @@
 			);
 			dependencies = (
 			);
-			name = SocialAccountKit;
+			name = SocialAccountKitSwift;
 			productName = SocialAccountKit;
-			productReference = B36C38421F6BFF2D004912AB /* SocialAccountKit.framework */;
+			productReference = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -284,7 +284,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B36C38411F6BFF2D004912AB /* SocialAccountKit */,
+				B36C38411F6BFF2D004912AB /* SocialAccountKitSwift */,
 				B3020EF71F808CAC001C2745 /* SocialAccountKitSwiftFatBinary */,
 				B3020F001F808F63001C2745 /* SocialAccountKitDemo */,
 			);
@@ -325,7 +325,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n\n#MY_FRAMEWORK_NAME=${PROJECT_NAME}\nMY_FRAMEWORK_NAME=\"SocialAccountKit\"\n\nUNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal\n\nARCHS_IOS=\"arm64 armv7 armv7s\"\nARCHS_SIMULATOR=\"i386 x86_64\"\n\n# make sure the output directory exists\nmkdir -p \"${UNIVERSAL_OUTPUTFOLDER}\"\n\n# Step 1. Build Device and Simulator versions\nxcodebuild BITCODE_GENERATION_MODE=bitcode OTHER_CFLAGS=\"-fembed-bitcode\" -target \"${MY_FRAMEWORK_NAME}\" ONLY_ACTIVE_ARCH=NO ARCHS=\"${ARCHS_IOS}\" -configuration ${CONFIGURATION} -sdk iphoneos  BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\nxcodebuild BITCODE_GENERATION_MODE=bitcode OTHER_CFLAGS=\"-fembed-bitcode\" -target \"${MY_FRAMEWORK_NAME}\" -configuration ${CONFIGURATION} -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO ARCHS=\"${ARCHS_SIMULATOR}\" BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\n\n# Step 2. Copy the framework structure (from iphoneos build) to the universal folder\ncp -R \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${MY_FRAMEWORK_NAME}.framework\" \"${UNIVERSAL_OUTPUTFOLDER}/\"\n\n# Step 3. Copy Swift modules from iphonesimulator build (if it exists) to the copied framework directory\nSIMULATOR_SWIFT_MODULES_DIR=\"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${MY_FRAMEWORK_NAME}.framework/Modules/${MY_FRAMEWORK_NAME}.swiftmodule/.\"\nif [ -d \"${SIMULATOR_SWIFT_MODULES_DIR}\" ]; then\ncp -R \"${SIMULATOR_SWIFT_MODULES_DIR}\" \"${UNIVERSAL_OUTPUTFOLDER}/${MY_FRAMEWORK_NAME}.framework/Modules/${MY_FRAMEWORK_NAME}.swiftmodule\"\nfi\n\n# Step 4. Create universal binary file using lipo and place the combined executable in the copied framework directory\nlipo -create -output \"${UNIVERSAL_OUTPUTFOLDER}/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\" \"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\" \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\"\n\n# Step 5. Convenience step to copy the framework to the project's directory\ncp -R \"${UNIVERSAL_OUTPUTFOLDER}/${MY_FRAMEWORK_NAME}.framework\" \"${PROJECT_DIR}\"\n\n# Step 6. Convenience step to open the project's directory in Finder\nopen \"${PROJECT_DIR}\"\n";
+			shellScript = "#!/bin/sh\n\n#MY_FRAMEWORK_NAME=${PROJECT_NAME}\nMY_FRAMEWORK_NAME=\"SocialAccountKitSwift\"\n\nUNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal\n\nARCHS_IOS=\"arm64\"\nARCHS_SIMULATOR=\"x86_64\"\n\n# make sure the output directory exists\nmkdir -p \"${UNIVERSAL_OUTPUTFOLDER}\"\n\n# Step 1. Build Device and Simulator versions\nxcodebuild BITCODE_GENERATION_MODE=bitcode OTHER_CFLAGS=\"-fembed-bitcode\" -target \"${MY_FRAMEWORK_NAME}\" ONLY_ACTIVE_ARCH=NO ARCHS=\"${ARCHS_IOS}\" -configuration ${CONFIGURATION} -sdk iphoneos  BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\nxcodebuild BITCODE_GENERATION_MODE=bitcode OTHER_CFLAGS=\"-fembed-bitcode\" -target \"${MY_FRAMEWORK_NAME}\" -configuration ${CONFIGURATION} -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO ARCHS=\"${ARCHS_SIMULATOR}\" BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\n\n# Step 2. Copy the framework structure (from iphoneos build) to the universal folder\ncp -R \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${MY_FRAMEWORK_NAME}.framework\" \"${UNIVERSAL_OUTPUTFOLDER}/\"\n\n# Step 3. Copy Swift modules from iphonesimulator build (if it exists) to the copied framework directory\nSIMULATOR_SWIFT_MODULES_DIR=\"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${MY_FRAMEWORK_NAME}.framework/Modules/${MY_FRAMEWORK_NAME}.swiftmodule/.\"\nif [ -d \"${SIMULATOR_SWIFT_MODULES_DIR}\" ]; then\ncp -R \"${SIMULATOR_SWIFT_MODULES_DIR}\" \"${UNIVERSAL_OUTPUTFOLDER}/${MY_FRAMEWORK_NAME}.framework/Modules/${MY_FRAMEWORK_NAME}.swiftmodule\"\nfi\n\n# Step 4. Create universal binary file using lipo and place the combined executable in the copied framework directory\nlipo -create -output \"${UNIVERSAL_OUTPUTFOLDER}/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\" \"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\" \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\"\n\n# Step 5. Convenience step to copy the framework to the project's directory\ncp -R \"${UNIVERSAL_OUTPUTFOLDER}/${MY_FRAMEWORK_NAME}.framework\" \"${PROJECT_DIR}\"\n\n# Step 6. Convenience step to open the project's directory in Finder\nopen \"${PROJECT_DIR}\"\n";
 		};
 		B3020EFC1F808CF8001C2745 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -384,7 +384,7 @@
 /* Begin PBXTargetDependency section */
 		B36325531F81FEB300183AD2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B36C38411F6BFF2D004912AB /* SocialAccountKit */;
+			target = B36C38411F6BFF2D004912AB /* SocialAccountKitSwift */;
 			targetProxy = B36325521F81FEB300183AD2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -519,7 +519,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -567,7 +567,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -659,7 +659,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B36C38471F6BFF2E004912AB /* Build configuration list for PBXNativeTarget "SocialAccountKit" */ = {
+		B36C38471F6BFF2E004912AB /* Build configuration list for PBXNativeTarget "SocialAccountKitSwift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B36C38481F6BFF2E004912AB /* Debug */,
