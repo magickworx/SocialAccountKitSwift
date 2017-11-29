@@ -1,7 +1,7 @@
 # SocialAccountKitSwift
 
 iOS 11 以降使えなくなった、Account.framework と Social.framework の代替フレームワーク。
-SocialAccountKit.framework を使えば、iOS 10.3 までと同じ感じで Twitter や Facebook の API にアクセスできるよ。
+SocialAccountKitSwift.framework を使えば、iOS 10.3 までと同じ感じで Twitter や Facebook の API にアクセスできるよ。
 
 設計コンセプトは、「できるだけ楽して対応」だ。
 なので、接頭語の置き換えと若干の修正で対応できるように実装してみた。
@@ -97,9 +97,9 @@ Xcode の Build Target を SocialAccountKitDemo に変更して Build を実行�
 
 ## 自作アプリへの組み込み方法
 
-### SocialAccountKit.framework のビルド
+### SocialAccountKitSwift.framework のビルド
 
-Xcode の Build Target に SocialAccountKitFatBinary を指定して Build を実行すると、SocialAccountKit.framework が作成される。これを自作アプリの Xcode の Embedded Binaries に設定する。良く使うなら、${HOME}/Library/Frameworks フォルダなどにコピーしておこう。
+Xcode の Build Target に SocialAccountKitFatBinary を指定して Build を実行すると、SocialAccountKitSwift.framework が作成される。これを自作アプリの Xcode の Embedded Binaries に設定する。良く使うなら、${HOME}/Library/Frameworks フォルダなどにコピーしておこう。
 
 #### サクッと習得するには
 
@@ -115,7 +115,7 @@ Xcode の Build Target に SocialAccountKitFatBinary を指定して Build を�
 iOS 11 よりも前は、iOS の設定アプリ内で Twitter や Facebook アカウントの管理ができた。
 iOS 11 以降は設定項目が無くなったので、アプリ側で管理する必要がある。
 
-SocialAccountKit.framework では、SAKAccoutViewController クラスを提供する。
+SocialAccountKitSwift.framework では、SAKAccoutViewController クラスを提供する。
 これを、次のようなソースコードを書いて呼び出す。
 
 ```Swift
