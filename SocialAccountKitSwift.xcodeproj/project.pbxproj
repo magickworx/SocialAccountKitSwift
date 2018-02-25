@@ -34,11 +34,11 @@
 		B3020F041F808F63001C2745 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3020F031F808F63001C2745 /* AppDelegate.swift */; };
 		B3020F0B1F808F63001C2745 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3020F0A1F808F63001C2745 /* Assets.xcassets */; };
 		B3020F0E1F808F63001C2745 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B3020F0C1F808F63001C2745 /* LaunchScreen.storyboard */; };
+		B319E63B2042B7F400633393 /* SocialAccountKitSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */; };
+		B319E63C2042B7F400633393 /* SocialAccountKitSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B334AB871F9D81C50033181A /* SignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B334AB861F9D81C40033181A /* SignInService.swift */; };
 		B363254D1F81F2F800183AD2 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B363254C1F81F2F800183AD2 /* BaseViewController.swift */; };
 		B363254F1F81F2FF00183AD2 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B363254E1F81F2FF00183AD2 /* RootViewController.swift */; };
-		B36325501F81FEB300183AD2 /* SocialAccountKitSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */; };
-		B36325511F81FEB300183AD2 /* SocialAccountKitSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B36C38421F6BFF2D004912AB /* SocialAccountKitSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B36325581F825F8B00183AD2 /* Twitter.plist in Resources */ = {isa = PBXBuildFile; fileRef = B36325571F825F8B00183AD2 /* Twitter.plist */; };
 		B36C38461F6BFF2E004912AB /* SocialAccountKit.h in Headers */ = {isa = PBXBuildFile; fileRef = B36C38441F6BFF2E004912AB /* SocialAccountKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B37D19461F8B983A00E949CE /* ComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37D19451F8B983A00E949CE /* ComposeViewController.swift */; };
@@ -55,23 +55,23 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		B36325521F81FEB300183AD2 /* PBXContainerItemProxy */ = {
+		B319E63D2042B7F400633393 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B36C38291F6B8C3E004912AB /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = B36C38411F6BFF2D004912AB;
-			remoteInfo = SocialAccountKit;
+			remoteInfo = SocialAccountKitSwift;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		B36325541F81FEB300183AD2 /* Embed Frameworks */ = {
+		B319E63F2042B7F400633393 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B36325511F81FEB300183AD2 /* SocialAccountKitSwift.framework in Embed Frameworks */,
+				B319E63C2042B7F400633393 /* SocialAccountKitSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -118,7 +118,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B36325501F81FEB300183AD2 /* SocialAccountKitSwift.framework in Frameworks */,
+				B319E63B2042B7F400633393 /* SocialAccountKitSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,12 +215,12 @@
 				B3020EFD1F808F63001C2745 /* Sources */,
 				B3020EFE1F808F63001C2745 /* Frameworks */,
 				B3020EFF1F808F63001C2745 /* Resources */,
-				B36325541F81FEB300183AD2 /* Embed Frameworks */,
+				B319E63F2042B7F400633393 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				B36325531F81FEB300183AD2 /* PBXTargetDependency */,
+				B319E63E2042B7F400633393 /* PBXTargetDependency */,
 			);
 			name = SocialAccountKitDemo;
 			productName = SocialAccountKitDemo;
@@ -338,7 +338,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n#MY_FRAMEWORK_NAME=${PROJECT_NAME}\nMY_FRAMEWORK_NAME=\"SocialAccountKit\"\nlipo -info \"${PROJECT_DIR}/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\"";
+			shellScript = "#!/bin/sh\n#MY_FRAMEWORK_NAME=${PROJECT_NAME}\nMY_FRAMEWORK_NAME=\"SocialAccountKitSwift\"\nlipo -info \"${PROJECT_DIR}/${MY_FRAMEWORK_NAME}.framework/${MY_FRAMEWORK_NAME}\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -382,10 +382,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		B36325531F81FEB300183AD2 /* PBXTargetDependency */ = {
+		B319E63E2042B7F400633393 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B36C38411F6BFF2D004912AB /* SocialAccountKitSwift */;
-			targetProxy = B36325521F81FEB300183AD2 /* PBXContainerItemProxy */;
+			targetProxy = B319E63D2042B7F400633393 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -441,7 +441,7 @@
 				DEVELOPMENT_TEAM = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = SocialAccountKitDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.magickworx.SocialAccountKitDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -468,7 +468,7 @@
 				DEVELOPMENT_TEAM = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = SocialAccountKitDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.magickworx.SocialAccountKitDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -519,7 +519,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -567,7 +567,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";

@@ -41,7 +41,7 @@
  *****************************************************************************/
 
 import UIKit
-import SocialAccountKit
+import SocialAccountKitSwift
 
 class RootViewController: BaseViewController
 {
