@@ -3,15 +3,15 @@
  * FILE:	ComposeViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Compose Tweet
  * DATE:	Sun, Oct  8 2017
- * UPDATED:	Mon, Nov 13 2017
+ * UPDATED:	Sat, May 19 2018
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@ public class SAKComposeViewController: UIViewController
     }
   }
 
+  let kLastAccountNameKey: String = "SAKLastAccountNameKey"
   let accountStore = SAKAccountStore.shared
   var accounts = [SAKAccount]()
   var account: SAKAccount?
@@ -259,7 +260,12 @@ public class SAKComposeViewController: UIViewController
   override public func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
 
-    if let account = accounts.first {
+    if let name = UserDefaults.standard.string(forKey: kLastAccountNameKey),
+       let account = accounts.filter({ $0.username == name }).first {
+      self.account = account
+      tableView.reloadData()
+    }
+    else if let account = accounts.first {
       self.account = account
       tableView.reloadData()
     }
@@ -536,6 +542,9 @@ extension SAKComposeViewController: UITableViewDelegate
         let row = indexPath.row
         self.account = accounts[row]
         navigationBar.popItem(animated: true)
+        if let name = account?.username {
+          UserDefaults.standard.set(name, forKey: kLastAccountNameKey)
+        }
     }
   }
 }
