@@ -3,15 +3,15 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Mon, Nov 13 2017
+ * UPDATED:	Thu, Sep 27 2018
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -344,9 +344,11 @@ public class OAuth
     }
 
     let baseString = signatureArray.joined(separator: "&")
+#if targetEnvironment(simulator)
 #if     DEBUG
     print("DEBUG[base] \(baseString)")
 #endif // DEBUG
+#endif
 
     var signingArray = [String]()
     if let consumerSecret = configuration.consumerSecret.urlEncoded {
@@ -359,14 +361,18 @@ public class OAuth
       signingArray.append("")
     }
     let signingKey = signingArray.joined(separator: "&")
+#if targetEnvironment(simulator)
 #if     DEBUG
     print("DEBUG[key] \(signingKey)")
 #endif // DEBUG
+#endif
 
     let signature = baseString.hmac(algorithm: .SHA1, key: signingKey)
+#if targetEnvironment(simulator)
 #if     DEBUG
     print("DEBUG[signature] \(signature)")
 #endif // DEBUG
+#endif
     return signature
   }
 

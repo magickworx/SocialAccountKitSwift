@@ -3,15 +3,15 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Mon, Nov 13 2017
+ * UPDATED:	Mon, Nov 26 2018
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -96,7 +96,12 @@ public class SAKSignInViewController: UIViewController
   var state: SignInState = .ready
 
   var configuration = WKWebViewConfiguration()
-  var webView: WKWebView?
+  lazy var webView: WKWebView = {
+    let webView = WKWebView(frame: self.view.bounds, configuration: configuration)
+    webView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    webView.navigationDelegate = self
+    return webView
+  }()
 
   required public init(coder aDecoder: NSCoder) {
     fatalError("NSCoding not supported")
@@ -116,7 +121,7 @@ public class SAKSignInViewController: UIViewController
   }
 
   deinit {
-    if let webView = self.webView, webView.isLoading {
+    if webView.isLoading {
       webView.stopLoading()
       webView.navigationDelegate = nil
     }
@@ -127,26 +132,18 @@ public class SAKSignInViewController: UIViewController
 
     self.edgesForExtendedLayout = []
     self.extendedLayoutIncludesOpaqueBars = true
-    if #available(iOS 11.0, *) {
-    }
-    else {
-      self.automaticallyAdjustsScrollViewInsets = false
-    }
 
     self.view.backgroundColor = .white
     self.view.autoresizesSubviews = true
     self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
 
-    webView = WKWebView(frame: self.view.bounds, configuration: configuration)
-    webView?.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
-    webView?.navigationDelegate = self
-    self.view.addSubview(webView!)
+    self.view.addSubview(webView)
   }
 
   override public func viewDidLoad() {
     super.viewDidLoad()
 
-    if let webView = self.webView, let url = self.requestURL {
+    if let url = self.requestURL {
       var request = URLRequest(url: url)
       request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
       webView.load(request)
@@ -209,11 +206,13 @@ extension SAKSignInViewController: WKNavigationDelegate
 
   fileprivate func handleGitHubSignIn(requestURL: URL, callbackURL: URL) {
     state.next(requestURL, callbackURL, callback)
+#if targetEnvironment(simulator)
 #if DEBUG_FLOW
     print("REQUEST:  " + requestURL.absoluteString)
     print("CALLBACK: " + callbackURL.absoluteString)
     print("[\(state.description)]")
-#endif // DEBUG
+#endif // DEBUG_FLOW
+#endif
     switch state {
       case .authorized:
         NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [

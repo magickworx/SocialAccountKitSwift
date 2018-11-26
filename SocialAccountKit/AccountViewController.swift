@@ -3,15 +3,15 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Mon, Nov 13 2017
+ * UPDATED:	Mon, Nov 26 2018
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,8 @@ public class SAKAccountViewController: UINavigationController
   }
 }
 
+fileprivate let kTableViewCellIdentifier = "UITableViewCellReusableIdentifier"
+
 class AccountViewController: UIViewController
 {
   public weak var editDelegate: SAKAccountViewControllerDelegate? = nil
@@ -81,7 +83,7 @@ class AccountViewController: UIViewController
 
   var oauth: OAuth? = nil
 
-  var tableView: UITableView = UITableView()
+  var tableView: UITableView = UITableView(frame: .zero)
   var tableData: [SAKAccount] = []
 
   var isCreatable: Bool = true // Can I create new account?
@@ -89,19 +91,15 @@ class AccountViewController: UIViewController
   var accountType: SAKAccountType? = nil {
     didSet {
       if let accountType = accountType {
-        switch accountType.identifier {
-          case .twitter:
-            let configuration = TwitterOAuthConfiguration()
-            oauth = OAuth(configuration)
-          case .facebook:
-            let configuration = FacebookOAuthConfiguration()
-            oauth = OAuth(configuration)
-          case .github:
-            let configuration = GitHubOAuthConfiguration()
-            oauth = OAuth(configuration)
-          default:
-            isCreatable = false
-        }
+        oauth = {
+          switch accountType.identifier {
+            case  .twitter: return OAuth(TwitterOAuthConfiguration())
+            case .facebook: return OAuth(FacebookOAuthConfiguration())
+            case   .github: return OAuth(GitHubOAuthConfiguration())
+            default: return nil
+          }
+        }()
+        isCreatable = (oauth != nil)
       }
     }
   }
@@ -133,26 +131,20 @@ class AccountViewController: UIViewController
 
     self.edgesForExtendedLayout = []
     self.extendedLayoutIncludesOpaqueBars = true
-    if #available(iOS 11.0, *) {
-    }
-    else {
-      self.automaticallyAdjustsScrollViewInsets = false
-    }
 
     self.view.backgroundColor = .white
     self.view.autoresizesSubviews = true
     self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
 
+    tableView.register(UITableViewCell.self, forCellReuseIdentifier: kTableViewCellIdentifier)
     tableView.frame = self.view.bounds
     tableView.delegate = self
     tableView.dataSource = self
-    tableView.rowHeight = UITableViewAutomaticDimension
+    tableView.rowHeight = UITableView.automaticDimension
     tableView.estimatedRowHeight = 48
     tableView.allowsSelectionDuringEditing = true
     tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
-    if #available(iOS 11.0, *) {
-      tableView.contentInsetAdjustmentBehavior = .never
-    }
+    tableView.contentInsetAdjustmentBehavior = .never
     self.view.addSubview(tableView)
   }
 
@@ -242,13 +234,7 @@ extension AccountViewController: UITableViewDataSource
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let reuseId = "UITableViewCellReusableIdentifier"
-    let cell: UITableViewCell = {
-      guard let cell = tableView.dequeueReusableCell(withIdentifier: reuseId) else {
-        return UITableViewCell(style: .value1, reuseIdentifier: reuseId)
-      }
-      return cell
-    }()
+    let cell = tableView.dequeueReusableCell(withIdentifier: kTableViewCellIdentifier, for: indexPath)
     cell.selectionStyle = .none
     cell.textLabel?.font = UIFont.systemFont(ofSize: 14.0)
 
@@ -275,7 +261,7 @@ extension AccountViewController: UITableViewDataSource
 
 extension AccountViewController: UITableViewDelegate
 {
-  func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCellEditingStyle {
+  func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
     let row = indexPath.row
     if row == tableData.count {
       return .insert
@@ -293,7 +279,7 @@ extension AccountViewController: UITableViewDelegate
     return tableView.isEditing
   }
 
-  func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+  func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
     if editingStyle == .delete {
       let row = indexPath.row
       let account = tableData[row]
@@ -419,7 +405,7 @@ extension AccountViewController
       return
     }
     oauth.requestCredentials(handler: {
-      (url, error) in
+      [unowned self] (url, error) in
       if let authenticateURL = url, let accountType = self.accountType, error == nil {
         DispatchQueue.main.async { [unowned self] in
           autoreleasepool {
@@ -463,18 +449,18 @@ extension AccountViewController
   func configurationUnprepared() {
     if let accountType = self.accountType {
       let service = accountType.serviceName
-      let text: String
-      switch accountType.identifier {
-        case .twitter:
-          text = "Confirm \(service).plist has set ConsumerKey and ConsumerSecret."
-        case .facebook:
-          text = "Confirm \(service).plist has set AppID and AppSecret."
-        case .github:
-          text = "Confirm \(service).plist has set ClientID and ClientSecret."
-        default:
-          text = "Unsupported service: \(service)"
-          break
-      }
+      let text: String = {
+        switch accountType.identifier {
+          case .twitter:
+            return "Confirm \(service).plist has set ConsumerKey and ConsumerSecret."
+          case .facebook:
+            return "Confirm \(service).plist has set AppID and AppSecret."
+          case .github:
+            return "Confirm \(service).plist has set ClientID and ClientSecret."
+          default:
+            return "Unsupported service: \(service)"
+        }
+      }()
       popup(title: "Attention", message: text)
     }
   }

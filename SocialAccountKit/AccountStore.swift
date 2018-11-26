@@ -3,15 +3,15 @@
  * FILE:	AccountStore.swift
  * DESCRIPTION:	SocialAccountKit: Manipulating and storing accounts.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Mon, Oct 23 2017
+ * UPDATED:	Mon, Nov 26 2018
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -140,26 +140,25 @@ public final class SAKAccountStore
     let entity = NSEntityDescription()
     entity.name = entityName
     entity.managedObjectClassName = entityName
-    /*
-    if #available(iOS 11.0, *) {
-      entity.indexes = Array<NSFetchIndexDescription>
-    }
-    */
+
+    var indexes: [NSFetchIndexDescription] = []
 
     // Create the attributes
     var properties = Array<NSAttributeDescription>()
 
     let makeDescription = {
-      (name: String, type: NSAttributeType, opt: Bool, idx: Bool) -> Void in
+      (name: String, type: NSAttributeType, isOptional: Bool, isIndexed: Bool) -> Void in
       let desc = NSAttributeDescription()
       desc.name = name
       desc.attributeType = type
-      desc.isOptional = opt
-      if #available(iOS 11.0, *) {
-        // Use NSEntityDescription.indexes
-      }
-      else {
-        desc.isIndexed = idx
+      desc.isOptional = isOptional
+      if isIndexed {
+        // colleationType := .binary | .rTree
+        let idxDesc = NSFetchIndexElementDescription(property: desc, collationType: .binary)
+        idxDesc.isAscending = true // 昇順
+        let idxName: String = name + "_index"
+        let index = NSFetchIndexDescription(name: idxName, elements: [idxDesc])
+        indexes.append(index)
       }
       properties.append(desc)
     }
@@ -171,6 +170,9 @@ public final class SAKAccountStore
 
     // Add attributes to entity
     entity.properties = properties
+
+    // Add indexes to entity
+    entity.indexes = indexes
 
     // Add entity to model
     model.entities = [entity]
@@ -368,30 +370,30 @@ extension Account
   var oauthCredential: Dictionary<String,String>? {
     set {
       if let dict = newValue {
-        self.oauth1 = NSKeyedArchiver.archivedData(withRootObject: dict)
+        self.oauth1 = try? NSKeyedArchiver.archivedData(withRootObject: dict, requiringSecureCoding: false)
       }
       else {
         self.oauth1 = nil
       }
     }
     get {
-      guard let oauth = self.oauth1 else { return nil }
-      return NSKeyedUnarchiver.unarchiveObject(with: oauth) as? Dictionary<String,String>
+      guard let data = self.oauth1, let oauth = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) else { return nil }
+      return oauth as? Dictionary<String,String>
     }
   }
 
   var oauth2Credential: Dictionary<String,Any>? {
     set {
       if let dict = newValue {
-        self.oauth2 = NSKeyedArchiver.archivedData(withRootObject: dict)
+        self.oauth2 = try? NSKeyedArchiver.archivedData(withRootObject: dict, requiringSecureCoding: false)
       }
       else {
         self.oauth2 = nil
       }
     }
     get {
-      guard let oauth = self.oauth2 else { return nil }
-      return NSKeyedUnarchiver.unarchiveObject(with: oauth) as? Dictionary<String,Any>
+      guard let data = self.oauth2, let oauth = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) else { return nil }
+      return oauth as? Dictionary<String,String>
     }
   }
 }
