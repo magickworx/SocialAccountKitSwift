@@ -37,8 +37,6 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *   THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: AppDelegate.m,v 1.6 2017/04/12 09:59:00 kouichi Exp $
- *
  *****************************************************************************/
 
 import Foundation
@@ -202,18 +200,18 @@ public class SAKComposeViewController: UIViewController
                                  style: .plain,
                                  target: self,
                                  action: #selector(didTapCancel))
-    cancelItem.setTitleTextAttributes([
-      .foregroundColor: self.view.tintColor
-    ], for: [])
+    if let color = self.view.tintColor {
+      cancelItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
+    }
     sheetItem.leftBarButtonItem = cancelItem
 
     postItem = UIBarButtonItem(title: "Post",
                                style: .done,
                                target: self,
                                action: #selector(didTapPost))
-    postItem.setTitleTextAttributes([
-      .foregroundColor: self.view.tintColor
-    ], for: [])
+    if let color = self.view.tintColor {
+      postItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
+    }
     postItem.setTitleTextAttributes([
       .foregroundColor: UIColor.lightGray
     ], for: [.disabled])
@@ -230,9 +228,9 @@ public class SAKComposeViewController: UIViewController
       navigationBar.backIndicatorTransitionMaskImage = image
     }
     let backItem = UIBarButtonItem()
-    backItem.setTitleTextAttributes([
-      .foregroundColor: self.view.tintColor
-    ], for: [])
+    if let color = self.view.tintColor {
+      backItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
+    }
     if let accountType = self.accountType {
       backItem.title = accountType.description
     }

@@ -3,15 +3,15 @@
  * FILE:	AccountType.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates info about particular type.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Thu, Oct 26 2017
+ * UPDATED:	Sun, May 19 2019
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2019 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2019 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,6 @@
  *   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *   THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: AppDelegate.m,v 1.6 2017/04/12 09:59:00 kouichi Exp $
  *
  *****************************************************************************/
 
@@ -65,7 +63,7 @@ extension SAKServiceTypeIdentifier: CustomStringConvertible
 
 public struct SAKAccountType
 {
-  internal(set) var identifier: SAKServiceTypeIdentifier
+  public internal(set) var identifier: SAKServiceTypeIdentifier
 
   public init(_ typeIdentifier: SAKServiceTypeIdentifier) {
     self.identifier = typeIdentifier
