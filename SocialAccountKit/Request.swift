@@ -3,15 +3,15 @@
  * FILE:	Request.swift
  * DESCRIPTION:	SocialAccountKit: Request Wrapper
  * DATE:	Thu, Sep 21 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,22 +43,28 @@ import Foundation
 
 public enum SAKRequestMethod: String
 {
+  case GET
+  case POST
+  case DELETE
+  case PUT
+  /*
   case GET    = "GET"
   case POST   = "POST"
   case DELETE = "DELETE"
   case PUT    = "PUT"
+  */
 }
 
 public typealias SAKRequestHandler = OAuthRequestHandler
 
-public struct SAKRequest
+public class SAKRequest
 {
   public internal(set) var account: SAKAccount? = nil
   public internal(set) var method: SAKRequestMethod = .GET
   public internal(set) var URL: URL? = nil
   public internal(set) var parameters: [String:Any] = [:]
 
-  fileprivate var oauth: OAuth? = nil
+  private var oauth: OAuth? = nil
 
   public init(forAccount account: SAKAccount, requestMethod method: SAKRequestMethod, url: URL, parameters: [String:Any] = [:]) throws {
     self.account = account

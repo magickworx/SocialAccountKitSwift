@@ -3,15 +3,15 @@
  * FILE:	AccountStore.swift
  * DESCRIPTION:	SocialAccountKit: Manipulating and storing accounts.
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Sun, May 19 2019
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017-2019 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2019 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,7 @@ fileprivate let entityName = "Account"
 
 public final class SAKAccountStore
 {
-  public static let shared = SAKAccountStore()
+  public static let shared: SAKAccountStore = SAKAccountStore()
 
   public internal(set) var accounts = [SAKAccount]()
 
@@ -77,7 +77,7 @@ public final class SAKAccountStore
   }
 
   // MARK: - Core Data stack
-  lazy var persistentContainer: NSPersistentContainer = {
+  private lazy var persistentContainer: NSPersistentContainer = {
     /*
      * The persistent container for the application. This implementation
      * creates and returns a container, having loaded the store for the
@@ -131,7 +131,7 @@ public final class SAKAccountStore
     }
   }
 
-  lazy var managedObjectModel: NSManagedObjectModel = {
+  private lazy var managedObjectModel: NSManagedObjectModel = {
     let model = NSManagedObjectModel()
 
     // Create the entity
@@ -181,7 +181,7 @@ public final class SAKAccountStore
 
 extension SAKAccountStore
 {
-  func createAccount(_ account: SAKAccount) {
+  private func createAccount(_ account: SAKAccount) {
     let context = persistentContainer.viewContext
     let entity = Account(context: context)
     entity.identifier = account.identifier
@@ -200,7 +200,7 @@ extension SAKAccountStore
     saveContext()
   }
 
-  fileprivate func account(with entity: Account) -> SAKAccount {
+  private func account(with entity: Account) -> SAKAccount {
     let type = SAKAccountType(entity.serviceType)
     let acct = SAKAccount(accountType: type, identifier: entity.identifier)
     if let username = entity.username {
@@ -221,7 +221,7 @@ extension SAKAccountStore
     return acct
   }
 
-  fileprivate func readAllAccounts() throws -> [SAKAccount] {
+  private func readAllAccounts() throws -> [SAKAccount] {
     var accounts = [SAKAccount]()
     let context = persistentContainer.viewContext
     let fetchRequest: NSFetchRequest = Account.fetchRequest()

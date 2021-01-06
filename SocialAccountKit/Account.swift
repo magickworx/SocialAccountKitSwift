@@ -3,15 +3,15 @@
  * FILE:	Account.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates the info about a user
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -62,20 +62,20 @@ public class SAKAccount
 extension SAKAccount: CustomStringConvertible
 {
   public var description: String {
-    var text: String = "[\(accountType.description)] "
+    var textArray: [String] = [ "[\(accountType.description)]" ]
     switch accountType.identifier {
       case .twitter:
         if let screenName = self.username {
-          text += screenName
+          textArray.append(screenName)
         }
       case .facebook:
         if let fullName = self.username {
-          text += fullName
+          textArray.append(fullName)
         }
       default:
         break
     }
-    return text
+    return textArray.joined(separator: " ")
   }
 
   public var accountDescription: String {

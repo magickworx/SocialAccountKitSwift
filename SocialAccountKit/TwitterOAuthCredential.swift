@@ -3,15 +3,15 @@
  * FILE:	TwitterOAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentails for Twitter
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct  7 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 
 import Foundation
 
-public class TwitterCredential: OAuthCredential
+public final class TwitterCredential: OAuthCredential
 {
   public var userID: String? = nil
   public var screenName: String? = nil
@@ -50,15 +50,16 @@ public class TwitterCredential: OAuthCredential
 extension OAuth
 {
   func verifyTwitterCredentials() {
-    let urlString = self.configuration.verifyTokenURI
-    let parameters = [
+    let urlString: String = self.configuration.verifyTokenURI
+    let parameters: [String:String] = [
       "include_entities" : "false",
       "skip_status" : "true",
       "include_email" : "true"
     ]
     if let requestURL = URL(string: urlString) {
       request(with: "GET", url: requestURL, parameters: parameters, completion: {
-        [unowned self] (data, response, error) in
+        [weak self] (data, response, error) in
+        guard let self = `self` else { return }
         if let httpResponse = response as? HTTPURLResponse,
            httpResponse.statusCode == 200 {
           if let data = data {
@@ -72,7 +73,7 @@ extension OAuth
     }
   }
 
-  func twitterCredentials(with data: Data) {
+  private func twitterCredentials(with data: Data) {
     do {
       if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
         if let screenName = json["screen_name"] as? String,

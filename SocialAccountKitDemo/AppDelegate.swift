@@ -3,14 +3,14 @@
  * FILE:	AppDelegate.swift
  * DESCRIPTION:	SocialAccountKitDemo: Application Main Controller
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Mon, Nov 26 2018
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
- * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,6 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *   THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: AppDelegate.m,v 1.6 2017/04/12 09:59:00 kouichi Exp $
- *
  *****************************************************************************/
 
 import UIKit
@@ -45,8 +43,6 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate
 {
-  open private(set) var themeColor: UIColor? = nil
-
   var window: UIWindow?
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -54,15 +50,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate
 
     // Create full-screen window
     self.window = UIWindow(frame: UIScreen.main.bounds)
-    self.window!.backgroundColor = .white
+    self.window?.backgroundColor = .white
 
     // Make root view controller
-    let viewController: RootViewController = RootViewController()
-    let navigationController: UINavigationController = UINavigationController(rootViewController: viewController)
-    self.window!.rootViewController = navigationController
+    self.window?.rootViewController = {
+      let viewController: RootViewController = RootViewController()
+      let navigationController: UINavigationController = UINavigationController(rootViewController: viewController)
+      return navigationController
+    }()
 
     // Show window
-    self.window!.makeKeyAndVisible()
+    self.window?.makeKeyAndVisible()
 
     return true
   }

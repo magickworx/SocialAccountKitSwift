@@ -3,15 +3,15 @@
  * FILE:	OAuth.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Authorization Class
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sun, May 19 2019
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017-2019 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2019 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -155,6 +155,7 @@ public typealias OAuthRequestHandler = (Data?, URLResponse?, Error?) -> Void
 public class OAuth
 {
   public internal(set) var configuration: OAuthConfigurationProtocol
+
   var credential: OAuthCredential
 
   public init(_ configuration: OAuthConfigurationProtocol, credential: OAuthCredential = OAuthCredential()) {
@@ -182,7 +183,7 @@ public class OAuth
       }
     }
 
-    var request = URLRequest(url: url)
+    var request: URLRequest = URLRequest(url: url)
     if method == "GET" && !parameters.isEmpty {
       if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
         components.query = queryString // 代入時に自動的に URL エンコードされる
@@ -248,7 +249,7 @@ public class OAuth
     }).resume()
   }
 
-  func authorizationHttpField(with method: String, url: URL, query: String?) -> String {
+  private func authorizationHttpField(with method: String, url: URL, query: String?) -> String {
     switch configuration.serviceType {
       case .facebook, .github:
         return oAuth2HeaderField()
@@ -259,7 +260,7 @@ public class OAuth
     }
   }
 
-  func oAuth2HeaderField() -> String {
+  private func oAuth2HeaderField() -> String {
     guard let  tokenType = credential.tokenType,
           let oauthToken = credential.oauth2Token else { return "" }
     switch tokenType {
@@ -270,7 +271,7 @@ public class OAuth
     }
   }
 
-  func oAuth1HeaderField(with method: String, url: URL, query: String?) -> String {
+  private func oAuth1HeaderField(with method: String, url: URL, query: String?) -> String {
     var param = [String:String]()
     param["oauth_consumer_key"] = configuration.consumerKey
     if let oauthToken = credential.oauthToken {
@@ -303,7 +304,7 @@ public class OAuth
     return String(uuid[st..<ed])
   }
 
-  func signature(with method: String, url: URL, query: String?, parameters: [String:String]) -> String {
+  private func signature(with method: String, url: URL, query: String?, parameters: [String:String]) -> String {
     var signatureArray = [String]() // for Signature Base String
 
     // The HTTP request method (e.g., "GET", "POST", etc).
@@ -374,7 +375,7 @@ public class OAuth
     return signature
   }
 
-  func oauthString(with parameters: Dictionary<String,String>) -> String {
+  private func oauthString(with parameters: Dictionary<String,String>) -> String {
     var oauthArray = [String]()
     for (key, val) in parameters {
       if let keyString = key.urlEncoded,
@@ -396,6 +397,7 @@ extension OAuth
 {
   public func requestCredentials(handler: @escaping OAuthAuthenticationHandler) {
     credential = OAuthCredential() // XXX: 手っ取り早い初期化
+
     switch self.configuration.serviceType {
       case .facebook:
         requestFacebookCredentials(handler: handler)
@@ -412,7 +414,8 @@ extension OAuth
     let urlString = configuration.requestTokenURI
     if let requestURL = URL(string: urlString) {
       request(with: "POST", url: requestURL, completion: {
-        [unowned self] (data, response, error) in
+        [weak self] (data, response, error) in
+        guard let self = `self` else { return }
         if let httpResponse = response as? HTTPURLResponse,
            httpResponse.statusCode == 200 {
           if let data = data, let responseString = String(data: data, encoding: .utf8) {
@@ -509,7 +512,8 @@ extension OAuth
       credential.update(token: token.value, verifier: verifier.value)
       if let requestURL = URL(string: configuration.accessTokenURI) {
         request(with: "POST", url: requestURL, completion: {
-          [unowned self] (data, response, error) in
+          [weak self] (data, response, error) in
+          guard let self = `self` else { return }
           if let httpResponse = response as? HTTPURLResponse,
              httpResponse.statusCode == 200 {
             if let data = data, let responseString = String(data: data, encoding: .utf8) {

@@ -8,11 +8,8 @@
 	<string></string>
 	<key>Permissions</key>
         <array>
-	        <string>public_profile</string>
                 <string>email</string>
                 <string>manage_pages</string>
-                <string>publish_pages</string>
-                <string>publish_actions</string>
                 <string>user_posts</string>
                 <string>user_friends</string>
         </array>

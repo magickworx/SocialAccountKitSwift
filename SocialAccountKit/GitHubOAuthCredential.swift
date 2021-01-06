@@ -3,15 +3,15 @@
  * FILE:	GitHubOAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentials for GitHub
  * DATE:	Wed, Oct 25 2017
- * UPDATED:	Thu, Oct 26 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 
 import Foundation
 
-public class GitHubCredential: OAuthCredential
+public final class GitHubCredential: OAuthCredential
 {
   public var userID: Int64? = nil
   public var name: String? = nil
@@ -54,7 +54,9 @@ fileprivate typealias GitHubRequestHandler = (Data) -> Void
 extension OAuth
 {
   func requestGitHubCredentials(handler: @escaping OAuthAuthenticationHandler) {
+#if DEBUG
     print("[GitHub] request")
+#endif
     if let configuration = self.configuration as? GitHubOAuthConfiguration {
       let scope = configuration.scopes.count > 0
                 ? configuration.scopes.joined(separator: "%20")
@@ -76,7 +78,9 @@ extension OAuth
   }
 
   func obtainGitHubAccessToken(with callbackURL: URL) {
+#if DEBUG
     print("[GitHub] obtain " + callbackURL.absoluteString)
+#endif
     guard let query = callbackURL.query else { return }
     let urlString = configuration.accessTokenURI
                   + "?client_id=\(configuration.consumerKey)"
@@ -94,8 +98,10 @@ extension OAuth
     }
   }
 
-  func acquireGitHubCredentials(with data: Data) {
+  private func acquireGitHubCredentials(with data: Data) {
+#if DEBUG
     print("[GitHub] aquire")
+#endif
     do {
       if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
         if let accessToken = json["access_token"] as? String,
@@ -110,8 +116,10 @@ extension OAuth
     }
   }
 
-  func verifyGitHubCredential() {
+  private func verifyGitHubCredential() {
+#if DEBUG
     print("[GitHub] verify")
+#endif
     guard let accessToken = credential.oauth2Token else { return }
     let urlString = self.configuration.verifyTokenURI
     if let url = URL(string: urlString) {
@@ -126,13 +134,15 @@ extension OAuth
     }
   }
 
-  func githubCredentials(with data: Data) {
+  private func githubCredentials(with data: Data) {
+#if DEBUG
     print("[GitHub] credentials")
+#endif
     do {
       if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
         if let  tokenType = self.credential.tokenType,
            let oauthToken = self.credential.oauth2Token {
-          let expiry = Date(timeIntervalSinceNow: 60*60*24*365)
+          let expiry: Date = Date(timeIntervalSinceNow: 60*60*24*365)
           let credentials = GitHubCredential(token: oauthToken, expiry: expiry)
           credentials.refreshToken = "none" // XXX: Dummy...要検討
           credentials.tokenType = tokenType
@@ -152,9 +162,10 @@ extension OAuth
     }
   }
 
-  fileprivate func sendRequest(_ request: URLRequest, handler: @escaping GitHubRequestHandler) {
+  private func sendRequest(_ request: URLRequest, handler: @escaping GitHubRequestHandler) {
     (URLSession.shared.dataTask(with: request) {
-      [unowned self] (data, response, error) in
+      [weak self] (data, response, error) in
+      guard let self = `self` else { return }
       if error == nil, let data = data {
         if let httpResponse = response as? HTTPURLResponse {
           let statusCode = httpResponse.statusCode

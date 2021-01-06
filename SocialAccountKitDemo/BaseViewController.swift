@@ -3,14 +3,14 @@
  * FILE:	BaseViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: Application Base View Controller
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Fri, Oct  6 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,6 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *   THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: AppDelegate.m,v 1.6 2017/04/12 09:59:00 kouichi Exp $
- *
  *****************************************************************************/
 
 import UIKit
@@ -61,18 +59,7 @@ class BaseViewController: UIViewController
 
     self.view.backgroundColor = .white
     self.view.autoresizesSubviews = true
-    self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
-
-    var frame: CGRect = self.view.frame
-    let statusBarHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-    frame.origin.y    += statusBarHeight
-    frame.size.height -= statusBarHeight
-
-    if let navBarHeight: CGFloat = self.navigationController?.navigationBar.bounds.size.height {
-      frame.origin.y    += navBarHeight
-      frame.size.height -= navBarHeight
-    }
-    self.view.frame = frame
+    self.view.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
   }
 
   func setup() {

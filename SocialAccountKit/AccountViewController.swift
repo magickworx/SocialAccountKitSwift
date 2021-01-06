@@ -3,15 +3,15 @@
  * FILE:	AccountViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Manage Accounts
  * DATE:	Wed, Sep 27 2017
- * UPDATED:	Mon, Nov 26 2018
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ public protocol SAKAccountViewControllerDelegate: class
   func accountViewController(canEdit account: SAKAccount) -> Bool
 }
 
-public class SAKAccountViewController: UINavigationController
+public final class SAKAccountViewController: UINavigationController
 {
   public weak var editDelegate: SAKAccountViewControllerDelegate? = nil {
     didSet {
@@ -71,22 +71,33 @@ public class SAKAccountViewController: UINavigationController
   }
 }
 
-fileprivate let kTableViewCellIdentifier = "UITableViewCellReusableIdentifier"
-
-class AccountViewController: UIViewController
+final class AccountViewController: UIViewController
 {
   public weak var editDelegate: SAKAccountViewControllerDelegate? = nil
 
-  let accountStore = SAKAccountStore.shared
+  private let accountStore: SAKAccountStore = SAKAccountStore.shared
 
-  var oauth: OAuth? = nil
+  private var oauth: OAuth? = nil
 
-  var tableView: UITableView = UITableView(frame: .zero)
-  var tableData: [SAKAccount] = []
+  private let kTableViewCellIdentifier: String = "UITableViewCellReusableIdentifier"
 
-  var isCreatable: Bool = true // Can I create new account?
+  private lazy var tableView: UITableView = {
+    let tableView: UITableView = UITableView(frame: self.view.bounds)
+    tableView.register(UITableViewCell.self, forCellReuseIdentifier: kTableViewCellIdentifier)
+    tableView.delegate = self
+    tableView.dataSource = self
+    tableView.rowHeight = UITableView.automaticDimension
+    tableView.estimatedRowHeight = 48
+    tableView.allowsSelectionDuringEditing = true
+    tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    tableView.contentInsetAdjustmentBehavior = .never
+    return tableView
+  }()
+  private var tableData: [SAKAccount] = []
 
-  var accountType: SAKAccountType? = nil {
+  private var isCreatable: Bool = true // Can I create new account?
+
+  private var accountType: SAKAccountType? = nil {
     didSet {
       if let accountType = accountType {
         oauth = {
@@ -132,27 +143,15 @@ class AccountViewController: UIViewController
 
     self.view.backgroundColor = .white
     self.view.autoresizesSubviews = true
-    self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
+    self.view.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
 
-    tableView.register(UITableViewCell.self, forCellReuseIdentifier: kTableViewCellIdentifier)
-    tableView.frame = self.view.bounds
-    tableView.delegate = self
-    tableView.dataSource = self
-    tableView.rowHeight = UITableView.automaticDimension
-    tableView.estimatedRowHeight = 48
-    tableView.allowsSelectionDuringEditing = true
-    tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
-    tableView.contentInsetAdjustmentBehavior = .never
     self.view.addSubview(tableView)
   }
 
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    let closeItem = UIBarButtonItem(barButtonSystemItem: .stop,
-                                    target: self,
-                                    action: #selector(closeAction))
-    self.navigationItem.leftBarButtonItem = closeItem
+    self.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .stop, target: self, action: #selector(handleClose))
     self.navigationItem.rightBarButtonItem = self.editButtonItem
   }
 
@@ -172,13 +171,27 @@ class AccountViewController: UIViewController
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
+
+    let safeAreaInsets: UIEdgeInsets = self.view.safeAreaInsets
+
+    let  width: CGFloat = self.view.bounds.size.width - (safeAreaInsets.left + safeAreaInsets.right)
+    let height: CGFloat = self.view.bounds.size.height - (safeAreaInsets.top + safeAreaInsets.bottom)
+
+    tableView.frame = {
+      let x: CGFloat = safeAreaInsets.left
+      let y: CGFloat = safeAreaInsets.top
+      let w: CGFloat = width
+      let h: CGFloat = height
+      return CGRect(x: x, y: y, width: w, height: h)
+    }()
   }
 }
 
 extension AccountViewController
 {
-  func loadData() {
-    DispatchQueue.main.async { [unowned self] in
+  private func loadData() {
+    DispatchQueue.main.async {
+      [unowned self] in
       if let accountType = self.accountType,
          let accounts = self.accountStore.accounts(with: accountType) {
         self.tableData = accounts
@@ -187,7 +200,7 @@ extension AccountViewController
     }
   }
 
-  @objc func closeAction(_ sender: UIBarButtonItem) {
+  @objc func handleClose(_ item: UIBarButtonItem) {
     dismiss(animated: true, completion: nil)
   }
 
@@ -201,9 +214,9 @@ extension AccountViewController
       return
     }
 
-    let section = 0
-    let row = tableData.count
-    let indexPath = IndexPath(row: row, section: section)
+    let section: Int = 0
+    let row: Int = tableData.count
+    let indexPath: IndexPath = IndexPath(row: row, section: section)
 
     tableView.beginUpdates()
     tableView.setEditing(editing, animated: animated)
@@ -236,7 +249,7 @@ extension AccountViewController: UITableViewDataSource
     cell.selectionStyle = .none
     cell.textLabel?.font = UIFont.systemFont(ofSize: 14.0)
 
-    let row = indexPath.row
+    let row: Int = indexPath.row
     if row == tableData.count {
       cell.editingAccessoryType = .disclosureIndicator
       cell.textLabel?.text = "Add New Account"
@@ -260,7 +273,7 @@ extension AccountViewController: UITableViewDataSource
 extension AccountViewController: UITableViewDelegate
 {
   func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
-    let row = indexPath.row
+    let row: Int = indexPath.row
     if row == tableData.count {
       return .insert
     }
@@ -269,9 +282,9 @@ extension AccountViewController: UITableViewDelegate
 
   func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
     if let editDelegate = self.editDelegate {
-      let row = indexPath.row
+      let row: Int = indexPath.row
       guard row != tableData.count else { return tableView.isEditing }
-      let account = tableData[row]
+      let account: SAKAccount = tableData[row]
       return editDelegate.accountViewController(canEdit: account)
     }
     return tableView.isEditing
@@ -279,8 +292,8 @@ extension AccountViewController: UITableViewDelegate
 
   func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
     if editingStyle == .delete {
-      let row = indexPath.row
-      let account = tableData[row]
+      let row: Int = indexPath.row
+      let account: SAKAccount = tableData[row]
       accountStore.removeAccount(account, withCompletionHandler: {
         [unowned self] (success, error) in
         self.tableData.remove(at: row)
@@ -300,11 +313,6 @@ extension AccountViewController: UITableViewDelegate
     if tableView.isEditing && indexPath.row == tableData.count {
       createNewAccount()
     }
-/*
-    else {
-      dump(tableData[indexPath.row])
-    }
-*/
   }
 }
 
@@ -348,7 +356,7 @@ extension AccountViewController
   }
 
   func saveCredentials(_ credentials: OAuthCredential, accountType: SAKAccountType) {
-    let account = SAKAccount(accountType: accountType)
+    let account: SAKAccount = SAKAccount(accountType: accountType)
     switch accountType.identifier {
       case .twitter:
         if let credentials = credentials as? TwitterCredential,
@@ -397,7 +405,7 @@ extension AccountViewController
     })
   }
 
-  func createNewAccount() {
+  private func createNewAccount() {
     guard let oauth = self.oauth, oauth.configuration.isReady else {
       configurationUnprepared()
       return
@@ -405,22 +413,25 @@ extension AccountViewController
     oauth.requestCredentials(handler: {
       [unowned self] (url, error) in
       if let authenticateURL = url, let accountType = self.accountType, error == nil {
-        DispatchQueue.main.async { [unowned self] in
+        DispatchQueue.main.async {
+          [unowned self] in
           autoreleasepool {
             let viewController = SAKSignInViewController(with: authenticateURL, accountType: accountType)
             viewController.callback = oauth.configuration.callbackURI
+            let dataType: WebsiteDataType = [ .diskCache, .memoryCache, .cookies ]
             switch accountType.identifier {
               case .twitter:
-                viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "twitter.com")
+                viewController.clearCache(of: dataType, in: "twitter.com")
               case .facebook:
 //                viewController.clearCache(in: "facebook.com")
-                viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "facebook.com")
+                viewController.clearCache(of: dataType, in: "facebook.com")
               case .github:
-                viewController.clearCache(of: [ .diskCache, .memoryCache, .cookies ], in: "github.com")
+                viewController.clearCache(of: dataType, in: "github.com")
                 viewController.clearCache(in: "githubusercontent.com")
               default:
                 break
             }
+            viewController.modalPresentationStyle = .overFullScreen
             self.present(viewController, animated: true, completion: nil)
           }
         }
@@ -466,8 +477,9 @@ extension AccountViewController
 
 extension AccountViewController
 {
-  fileprivate func popup(title: String, message: String) {
-    DispatchQueue.main.async { [unowned self] in
+  private func popup(title: String, message: String) {
+    DispatchQueue.main.async {
+      [unowned self] in
       autoreleasepool {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))

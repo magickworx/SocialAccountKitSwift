@@ -3,15 +3,15 @@
  * FILE:	ComposeViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller to Compose Tweet
  * DATE:	Sun, Oct  8 2017
- * UPDATED:	Sat, May 19 2018
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ public enum SAKComposeViewControllerResult
 
 public typealias SAKComposeViewControllerCompletionHandler = (SAKComposeViewControllerResult) -> Void
 
-public class SAKComposeViewController: UIViewController
+public final class SAKComposeViewController: UIViewController
 {
   public class func isAvailable(for accountType: SAKAccountType) -> Bool {
     switch accountType.identifier {
@@ -72,25 +72,25 @@ public class SAKComposeViewController: UIViewController
     }
   }
 
-  let kLastAccountNameKey: String = "SAKLastAccountNameKey"
-  let accountStore = SAKAccountStore.shared
-  var accounts = [SAKAccount]()
-  var account: SAKAccount?
+  private let kLastAccountNameKey: String = "SAKLastAccountNameKey"
+  private let accountStore: SAKAccountStore = SAKAccountStore.shared
+  private var accounts = [SAKAccount]()
+  private var account: SAKAccount? = nil
 
-  var accountType: SAKAccountType? = nil {
+  private var accountType: SAKAccountType? = nil {
     didSet {
       if let type = accountType {
-        getAccounts(with: type)
-        sheetItem.title = type.description
+        loadAccounts(with: type)
       }
     }
   }
 
-  enum ComposeViewMode {
+  private enum ComposeViewMode {
     case editing
     case selecting
   }
-  var viewMode: ComposeViewMode = .editing {
+
+  private var viewMode: ComposeViewMode = .editing {
     didSet {
       switch viewMode {
         case .editing:
@@ -101,23 +101,114 @@ public class SAKComposeViewController: UIViewController
     }
   }
 
-  let sheetView: UIView = UIView(frame: .zero)
+  private lazy var sheetView: UIView = {
+    let sheetView: UIView = UIView(frame: .zero)
+    sheetView.backgroundColor = .white
+    sheetView.layer.cornerRadius = 8.0
+    sheetView.autoresizesSubviews = true
+    sheetView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    return sheetView
+  }()
+
+  private lazy var contentView: UIView = {
     let contentView: UIView = UIView(frame: .zero)
-      let navigationBar: UINavigationBar = UINavigationBar(frame: .zero)
-        var cancelItem: UIBarButtonItem = UIBarButtonItem()
-        let sheetItem: UINavigationItem = UINavigationItem()
-        var postItem: UIBarButtonItem = UIBarButtonItem()
-      let composeView: UIView = UIView(frame: .zero)
-        let textView: UITextView = UITextView(frame: .zero)
-        let footerView: UIView = UIView(frame: .zero)
-          let charactersLabel: UILabel = UILabel(frame: .zero)
-      let tableView: UITableView = UITableView(frame: .zero)
+    contentView.backgroundColor = .clear
+    contentView.autoresizesSubviews = true
+    contentView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    return contentView
+  }()
 
-  let mediaURLLength = 23 // XXX: 添付画像などはどう処理する？
-  let maxTweetLength: Int = 140
-  var topMargin: CGFloat = 40.0
+  private lazy var navigationBar: UINavigationBar = {
+    let navigationBar: UINavigationBar = UINavigationBar(frame: .zero)
+    navigationBar.pushItem(sheetItem, animated: false)
+    navigationBar.titleTextAttributes = [
+      .foregroundColor: UIColor.black
+    ]
+    navigationBar.barTintColor = .white
+    if let image = backIndicator() {
+      navigationBar.backIndicatorImage = image
+      navigationBar.backIndicatorTransitionMaskImage = image
+    }
+    navigationBar.delegate = self
+    return navigationBar
+  }()
 
-  var numberOfChars: Int = 0 {
+  private lazy var cancelItem: UIBarButtonItem = {
+    let cancelItem: UIBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleCancel))
+    if let color = self.view.tintColor {
+      cancelItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
+    }
+    return cancelItem
+  }()
+
+  private lazy var postItem: UIBarButtonItem = {
+    let postItem: UIBarButtonItem = UIBarButtonItem(title: "Post", style: .done, target: self, action: #selector(handlePost))
+    if let color = self.view.tintColor {
+      postItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
+    }
+    postItem.setTitleTextAttributes([
+      .foregroundColor: UIColor.lightGray
+    ], for: [.disabled])
+    return postItem
+  }()
+
+  private lazy var sheetItem: UINavigationItem = {
+    let sheetItem: UINavigationItem = {
+      if let type = accountType {
+        return UINavigationItem(title: type.description)
+      }
+      return UINavigationItem()
+    }()
+    sheetItem.hidesBackButton = false
+    sheetItem.leftBarButtonItem = cancelItem
+    sheetItem.rightBarButtonItem = postItem
+    sheetItem.backBarButtonItem = {
+      let backItem = UIBarButtonItem()
+      if let color = self.view.tintColor {
+        backItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
+      }
+      if let accountType = self.accountType {
+        backItem.title = accountType.description
+      }
+      return backItem
+    }()
+    return sheetItem
+  }()
+
+  private lazy var composeView: UIView = UIView(frame: .zero)
+
+  private lazy var textView: UITextView = {
+    let textView: UITextView = UITextView(frame: .zero)
+    textView.font = UIFont.systemFont(ofSize: 18.0)
+    textView.delegate = self
+    return textView
+  }()
+
+  private lazy var footerView: UIView = UIView(frame: .zero)
+
+  private lazy var charactersLabel: UILabel = {
+    let charactersLabel: UILabel = UILabel(frame: .zero)
+    charactersLabel.font = UIFont.systemFont(ofSize: 12.0)
+    charactersLabel.textColor = .lightGray
+    charactersLabel.textAlignment = .left
+    return charactersLabel
+  }()
+
+  private let kTableViewCellIdentifier: String = "UITableViewCellReusableIdentifier"
+  private lazy var tableView: UITableView = {
+    let tableView: UITableView = UITableView(frame: .zero)
+    tableView.delegate = self
+    tableView.dataSource = self
+    tableView.separatorStyle = .none
+    tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    return tableView
+  }()
+
+  private let mediaURLLength: Int = 23 // XXX: 添付画像などはどう処理する？
+  private let maxTweetLength: Int = 140
+  private var topMargin: CGFloat = 40.0
+
+  private var numberOfChars: Int = 0 {
     didSet {
       if let accountType = self.accountType {
         accountType.with {
@@ -174,85 +265,26 @@ public class SAKComposeViewController: UIViewController
 
     self.view.backgroundColor = UIColor(white: 0.0, alpha: 0.2)
     self.view.autoresizesSubviews = true
-    self.view.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
+    self.view.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+
+    self.view.addSubview(sheetView)
+
+    contentView.addSubview(navigationBar)
+    contentView.addSubview(composeView)
+    sheetView.addSubview(contentView)
+
+    composeView.addSubview(textView)
+
+    footerView.addSubview(charactersLabel)
+    composeView.addSubview(footerView)
+
+    contentView.addSubview(tableView)
   }
 
   override public func viewDidLoad() {
     super.viewDidLoad()
 
-    sheetView.backgroundColor = .white
-    sheetView.layer.cornerRadius = 8.0
-    sheetView.autoresizesSubviews = true
-    sheetView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
-    self.view.addSubview(sheetView)
-
-    contentView.backgroundColor = .clear
-    contentView.autoresizesSubviews = true
-    contentView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
-    contentView.addSubview(navigationBar)
-    contentView.addSubview(composeView)
-    sheetView.addSubview(contentView)
-
-    // MARK: - prepare navigation bar area
-    sheetItem.hidesBackButton = false
-
-    cancelItem = UIBarButtonItem(title: "Cancel",
-                                 style: .plain,
-                                 target: self,
-                                 action: #selector(didTapCancel))
-    if let color = self.view.tintColor {
-      cancelItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
-    }
-    sheetItem.leftBarButtonItem = cancelItem
-
-    postItem = UIBarButtonItem(title: "Post",
-                               style: .done,
-                               target: self,
-                               action: #selector(didTapPost))
-    if let color = self.view.tintColor {
-      postItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
-    }
-    postItem.setTitleTextAttributes([
-      .foregroundColor: UIColor.lightGray
-    ], for: [.disabled])
-    sheetItem.rightBarButtonItem = postItem
-
-    navigationBar.pushItem(sheetItem, animated: false)
-    navigationBar.titleTextAttributes = [
-      .foregroundColor: UIColor.black
-    ]
-    navigationBar.barTintColor = .white
-    navigationBar.delegate = self
-    if let image = backIndicator() {
-      navigationBar.backIndicatorImage = image
-      navigationBar.backIndicatorTransitionMaskImage = image
-    }
-    let backItem = UIBarButtonItem()
-    if let color = self.view.tintColor {
-      backItem.setTitleTextAttributes([ .foregroundColor: color ], for: [])
-    }
-    if let accountType = self.accountType {
-      backItem.title = accountType.description
-    }
-    sheetItem.backBarButtonItem = backItem
-
-    // MARK: - prepare compose area
-    textView.font = UIFont.systemFont(ofSize: 14.0)
-    textView.delegate = self
-    composeView.addSubview(textView)
-
-    numberOfChars = 0
-    charactersLabel.font = UIFont.systemFont(ofSize: 12.0)
-    charactersLabel.textAlignment = .left
-    charactersLabel.textColor = .lightGray
-    footerView.addSubview(charactersLabel)
-    composeView.addSubview(footerView)
-
-    tableView.delegate = self
-    tableView.dataSource = self
-    tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
-    tableView.separatorStyle = .none
-    contentView.addSubview(tableView)
+    self.numberOfChars = 0
   }
 
   override public func viewWillAppear(_ animated: Bool) {
@@ -358,7 +390,7 @@ public class SAKComposeViewController: UIViewController
 
 extension SAKComposeViewController
 {
-  fileprivate func dismiss(with result: SAKComposeViewControllerResult) {
+  private func dismiss(with result: SAKComposeViewControllerResult) {
     DispatchQueue.main.async {
       [weak self] in
       if let weakSelf = self {
@@ -369,11 +401,11 @@ extension SAKComposeViewController
     }
   }
 
-  @objc func didTapCancel(_ item: UIBarButtonItem) {
+  @objc func handleCancel(_ item: UIBarButtonItem) {
     dismiss(with: .cancelled)
   }
 
-  @objc func didTapPost(_ item: UIBarButtonItem) {
+  @objc func handlePost(_ item: UIBarButtonItem) {
     if let accountType = self.accountType, let account = self.account,
        let text = textView.text {
       textView.resignFirstResponder()
@@ -421,7 +453,7 @@ extension SAKComposeViewController
   }
 
   func feed(_ text: String, with account: SAKAccount) {
-    let endpoint = "https://graph.facebook.com/v2.10/me/feed"
+    let endpoint = "https://graph.facebook.com/v9.0/me/feed"
     if let url = URL(string: endpoint) {
       let parameters: [String:Any] = [
         "message": text,
@@ -452,10 +484,10 @@ extension SAKComposeViewController
 
 extension SAKComposeViewController
 {
-  fileprivate func getAccounts(with accountType: SAKAccountType) {
+  private func loadAccounts(with accountType: SAKAccountType) {
     accountStore.requestAccessToAccounts(with: accountType, completion: {
-      [unowned self] (granted: Bool, error: Error?) in
-      guard granted, error == nil else { return }
+      [weak self] (granted: Bool, error: Error?) in
+      guard let self = `self`, granted, error == nil else { return }
       if let accounts = self.accountStore.accounts(with: accountType) {
         self.accounts = accounts
       }
@@ -498,10 +530,9 @@ extension SAKComposeViewController: UITableViewDataSource
   }
 
   public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let reuseId = "UITableViewCellReusableIdentifier"
     let cell: UITableViewCell = {
-      guard let cell = tableView.dequeueReusableCell(withIdentifier: reuseId) else {
-        return UITableViewCell(style: .value1, reuseIdentifier: reuseId)
+      guard let cell = tableView.dequeueReusableCell(withIdentifier: kTableViewCellIdentifier) else {
+        return UITableViewCell(style: .value1, reuseIdentifier: kTableViewCellIdentifier)
       }
       return cell
     }()
@@ -550,13 +581,16 @@ extension SAKComposeViewController: UITableViewDelegate
 extension SAKComposeViewController: UINavigationBarDelegate
 {
   public func navigationBar(_ navigationBar: UINavigationBar, shouldPush item: UINavigationItem) -> Bool {
-    DispatchQueue.main.async { [unowned self] in
+    DispatchQueue.main.async {
+      [unowned self] in
       self.viewMode = .selecting
       self.composeView.isHidden = true
-      let origin = self.composeView.frame.origin
-      var size = self.composeView.frame.size
-      size.height += self.tableView.frame.size.height
-      self.tableView.frame = CGRect(origin: origin, size: size)
+      self.tableView.frame = {
+        let origin = self.composeView.frame.origin
+        var size = self.composeView.frame.size
+        size.height += self.tableView.frame.size.height
+        return CGRect(origin: origin, size: size)
+      }()
       self.tableView.separatorStyle = .singleLine
       self.tableView.reloadData()
     }
@@ -570,11 +604,13 @@ extension SAKComposeViewController: UINavigationBarDelegate
     DispatchQueue.main.async { [unowned self] in
       self.viewMode = .editing
       self.composeView.isHidden = false
-      var origin = self.tableView.frame.origin
-      var size = self.tableView.frame.size
-      origin.y += self.composeView.frame.size.height
-      size.height -= self.composeView.frame.size.height
-      self.tableView.frame = CGRect(origin: origin, size: size)
+      self.tableView.frame = {
+        var origin = self.tableView.frame.origin
+        var size = self.tableView.frame.size
+        origin.y += self.composeView.frame.size.height
+        size.height -= self.composeView.frame.size.height
+        return CGRect(origin: origin, size: size)
+      }()
       self.tableView.separatorStyle = .none
       self.tableView.reloadData()
     }
@@ -587,7 +623,7 @@ extension SAKComposeViewController: UINavigationBarDelegate
 
 extension SAKComposeViewController
 {
-  fileprivate func backIndicator() -> UIImage? {
+  private func backIndicator() -> UIImage? {
     let  width: CGFloat = 14.0
     let height: CGFloat = 22.0
     let   size: CGSize  = CGSize(width: width, height: height)

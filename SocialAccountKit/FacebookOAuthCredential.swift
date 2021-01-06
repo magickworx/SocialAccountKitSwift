@@ -3,15 +3,15 @@
  * FILE:	FacebookOAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentials for Facebook
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Sat, Oct 21 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 
 import Foundation
 
-public class FacebookCredential: OAuthCredential
+public final class FacebookCredential: OAuthCredential
 {
   public var userID: String? = nil
   public var fullName: String? = nil
@@ -89,7 +89,7 @@ extension OAuth
     }
   }
 
-  func acquireFacebookCredentials(with data: Data) {
+  private func acquireFacebookCredentials(with data: Data) {
     do {
       if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any] {
         if let accessToken = json["access_token"] as? String,
@@ -106,7 +106,7 @@ extension OAuth
     }
   }
 
-  func verifyFacebookCredential() {
+  private func verifyFacebookCredential() {
     guard let accessToken = credential.oauth2Token else { return }
     /*
      * https://developers.facebook.com/docs/facebook-login/access-tokens/#apptokens
@@ -127,14 +127,14 @@ extension OAuth
     }
   }
 
-  func facebookCredentials(with data: Data) {
+  private func facebookCredentials(with data: Data) {
     do {
       if let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String:Any], let data = json["data"] as? [String:Any] {
         if let     userID = data["user_id"] as? String,
            let  expiresAt = data["expires_at"] as? TimeInterval,
            let  tokenType = self.credential.tokenType,
            let oauthToken = self.credential.oauth2Token {
-          let expiry = Date(timeIntervalSince1970: expiresAt)
+          let expiry: Date = Date(timeIntervalSince1970: expiresAt)
           let credentials = FacebookCredential(token: oauthToken, expiry: expiry)
           credentials.refreshToken = "none" // XXX: Dummy...要検討
           credentials.tokenType = tokenType
@@ -157,7 +157,7 @@ extension OAuth
     }
   }
 
-  func fetchUserInfo(with userID: String, handler: @escaping (Dictionary<String,Any>?) -> Void) {
+  private func fetchUserInfo(with userID: String, handler: @escaping (Dictionary<String,Any>?) -> Void) {
     let urlString = "https://graph.facebook.com/me"
     if let url = URL(string: urlString) {
       request(with: "GET", url: url, completion: {
@@ -175,9 +175,10 @@ extension OAuth
     }
   }
 
-  fileprivate func sendRequest(_ request: URLRequest, handler: @escaping FacebookRequestHandler) {
+  private func sendRequest(_ request: URLRequest, handler: @escaping FacebookRequestHandler) {
     (URLSession.shared.dataTask(with: request) {
-      [unowned self] (data, response, error) in
+      [weak self] (data, response, error) in
+      guard let self = `self` else { return }
       if error == nil, let data = data {
         if let httpResponse = response as? HTTPURLResponse {
           let statusCode = httpResponse.statusCode

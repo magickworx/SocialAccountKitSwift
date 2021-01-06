@@ -3,15 +3,15 @@
  * FILE:	FacebookOAuthConfiguration.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Configuration for Facebook
  * DATE:	Fri, Sep 15 2017
- * UPDATED:	Tue, Oct 24 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,24 +41,24 @@
 
 import Foundation
 
-public struct FacebookOAuthConfiguration: OAuthConfigurationProtocol
+public class FacebookOAuthConfiguration: OAuthConfigurationProtocol
 {
   public var serviceType: OAuthConfigurationServiceType = .facebook
 
-  public let requestTokenURI = "https://m.facebook.com/v2.10/dialog/oauth"
-  public let authorizationURI = "https://m.facebook.com/v2.10/dialog/oauth"
-  public let accessTokenURI = "https://graph.facebook.com/v2.10/oauth/access_token"
-  public let verifyTokenURI = "https://graph.facebook.com/v2.10/debug_token"
+  public let requestTokenURI: String = "https://m.facebook.com/v9.0/dialog/oauth"
+  public let authorizationURI: String = "https://m.facebook.com/v9.0/dialog/oauth"
+  public let accessTokenURI: String = "https://graph.facebook.com/v9.0/oauth/access_token"
+  public let verifyTokenURI: String = "https://graph.facebook.com/v9.0/debug_token"
 
-  public var callbackURI = "https://www.facebook.com/connect/login_success.html"
+  public var callbackURI: String = "https://www.facebook.com/connect/login_success.html"
 
-  public var consumerKey = ""
-  public var consumerSecret = ""
+  public var consumerKey: String = ""
+  public var consumerSecret: String = ""
 
   public var permissions: [String] = []
 
   public var isReady: Bool {
-    return (consumerKey != "" && consumerSecret != "")
+    return (!consumerKey.isEmpty && !consumerSecret.isEmpty)
   }
 
   public init() {
@@ -70,20 +70,20 @@ extension FacebookOAuthConfiguration
 {
   // Facebook.plist に AppID と AppSecret が設定されていたら
   // それらの値を初期値とする
-  mutating func readConsumerKeyAndSecret(from plist: String = "Facebook") throws {
+  func readConsumerKeyAndSecret(from plist: String = "Facebook") throws {
     if let url = Bundle.main.url(forResource: plist, withExtension: "plist") {
       do {
         let data = try Data(contentsOf: url)
         let dict = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as! [String:Any]
         if let    key = dict["AppID"] as? String,
            let secret = dict["AppSecret"] as? String {
-          consumerKey = key
-          consumerSecret = secret
+          self.consumerKey = key
+          self.consumerSecret = secret
           if let scope = dict["Permissions"] as? Array<String> {
-            permissions = scope
+            self.permissions = scope
           }
           if let cbURI = dict["CallbackURI"] as? String {
-            callbackURI = cbURI
+            self.callbackURI = cbURI
           }
         }
       }

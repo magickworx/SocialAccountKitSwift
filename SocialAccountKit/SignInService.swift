@@ -3,14 +3,14 @@
  * FILE:	SignInService.swift
  * DESCRIPTION:	SocialAccountKit: Sign In Service Class
  * DATE:	Sat, Oct 21 2017
- * UPDATED:	Thu, Oct 26 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@ import UIKit
 
 public typealias SAKSignInServiceCompletionHandler = (Bool, SAKAccount?, Error?) -> Void
 
-public class SAKSignInService: NSObject
+public final class SAKSignInService: NSObject
 {
   /*
    * Sign In 認証後に SAKAccountStore にアカウントを保存する。
@@ -56,28 +56,23 @@ public class SAKSignInService: NSObject
   public internal(set) var accountType: SAKAccountType? = nil {
     didSet {
       if let accountType = accountType {
-        switch accountType.identifier {
-          case .twitter:
-            let configuration = TwitterOAuthConfiguration()
-            oauth = OAuth(configuration)
-          case .facebook:
-            let configuration = FacebookOAuthConfiguration()
-            oauth = OAuth(configuration)
-          case .github:
-            let configuration = GitHubOAuthConfiguration()
-            oauth = OAuth(configuration)
-          case .appOnly:
-            let configuration = AppOnlyAuthConfiguration()
-            oauth = OAuth(configuration)
-        }
+        let configuration: OAuthConfigurationProtocol = {
+          switch accountType.identifier {
+            case .twitter:  return TwitterOAuthConfiguration()
+            case .facebook: return FacebookOAuthConfiguration()
+            case .github:   return GitHubOAuthConfiguration()
+            case .appOnly:  return AppOnlyAuthConfiguration()
+          }
+        }()
+        oauth = OAuth(configuration)
       }
     }
   }
 
-  let accountStore = SAKAccountStore.shared
+  private let accountStore: SAKAccountStore = SAKAccountStore.shared
 
-  var oauth: OAuth? = nil
-  var completionHandler: SAKSignInServiceCompletionHandler? = nil
+  private var oauth: OAuth? = nil
+  private var completionHandler: SAKSignInServiceCompletionHandler? = nil
 
   public convenience init(accountType: SAKAccountType) {
     self.init()
@@ -96,7 +91,7 @@ public class SAKSignInService: NSObject
 
 extension SAKSignInService
 {
-  fileprivate func addNotification() {
+  private func addNotification() {
     let center = NotificationCenter.default
     center.addObserver(self,
                        selector: #selector(verfiyCredentials),
@@ -112,7 +107,7 @@ extension SAKSignInService
                        object: nil)
   }
 
-  fileprivate func removeNotification() {
+  private func removeNotification() {
     let center = NotificationCenter.default
     center.removeObserver(self,
                           name: .OAuthDidVerifyCredentials,
@@ -125,7 +120,7 @@ extension SAKSignInService
                           object: nil)
   }
 
-  @objc fileprivate func verfiyCredentials(_ notification: Notification) {
+  @objc private func verfiyCredentials(_ notification: Notification) {
     guard let userInfo = notification.userInfo else { return }
     if let accountType = self.accountType,
        let credentials = userInfo[OAuthCredentialsKey] as? OAuthCredential {
@@ -133,7 +128,7 @@ extension SAKSignInService
     }
   }
 
-  fileprivate func saveCredentials(_ credentials: OAuthCredential, accountType: SAKAccountType) {
+  private func saveCredentials(_ credentials: OAuthCredential, accountType: SAKAccountType) {
     let account = SAKAccount(accountType: accountType)
     switch accountType.identifier {
       case .twitter:
@@ -189,14 +184,14 @@ extension SAKSignInService
     }
   }
 
-  @objc fileprivate func missCredentials(_ notification: Notification) {
+  @objc private func missCredentials(_ notification: Notification) {
     guard let userInfo = notification.userInfo else { return }
     if let error = userInfo[OAuthErrorInfoKey] as? Error {
       handleError(error)
     }
   }
 
-  @objc fileprivate func authorizationFailure(_ notification: Notification) {
+  @objc private func authorizationFailure(_ notification: Notification) {
     let text = "Failed to authorize account. Check username and password once again."
     handleError(SAKError.OAuthAuthenticationFailed(text))
   }
@@ -215,16 +210,14 @@ extension SAKSignInService
       return
     }
     oauth.requestCredentials(handler: {
-      [unowned self] (url, error) in
-      guard error == nil else {
-        if let error = error {
-          var text = String()
-          dump(error, to: &text)
-          self.handleError(SAKError.OAuthAuthenticationFailed(text))
-        }
-        return
+      [weak self] (url, error) in
+      guard let self = `self` else { return }
+      if let error = error {
+        var text = String()
+        dump(error, to: &text)
+        self.handleError(SAKError.OAuthAuthenticationFailed(text))
       }
-      if let authenticateURL = url {
+      else if let authenticateURL = url {
         DispatchQueue.main.async {
           autoreleasepool {
             let viewController = SAKSignInViewController(with: authenticateURL, accountType: accountType)
@@ -237,6 +230,7 @@ extension SAKSignInService
               default:
                 break
             }
+            viewController.modalPresentationStyle = .overFullScreen
             contentController.present(viewController, animated: true, completion: nil)
           }
         }
@@ -252,7 +246,8 @@ extension SAKSignInService
     if let accountType = self.accountType, accountType.identifier == .appOnly {
       self.completionHandler = completion
       oauth.requestCredentials(handler: {
-        [unowned self] (url, error) in
+        [weak self] (url, error) in
+        guard let self = `self` else { return }
         if url == nil && error == nil {
           oauth.verifyAppOnlyCredentials()
         }
@@ -271,7 +266,7 @@ extension SAKSignInService
     })
   }
 
-  fileprivate func configurationUnprepared() {
+  private func configurationUnprepared() {
     if let accountType = self.accountType {
       let service = accountType.serviceName
       let text: String
@@ -291,7 +286,7 @@ extension SAKSignInService
     }
   }
 
-  fileprivate func handleError(_ error: Error?) {
+  private func handleError(_ error: Error?) {
     if let completionHandler = self.completionHandler {
       completionHandler(false, nil, error)
     }

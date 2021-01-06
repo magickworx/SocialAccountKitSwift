@@ -3,15 +3,15 @@
  * FILE:	AppOnlyAuthCredential.swift
  * DESCRIPTION:	SocialAccountKit: OAuth Credentails for App-only of Twitter
  * DATE:	Fri, Oct 20 2017
- * UPDATED:	Tue, Oct 24 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 
 import Foundation
 
-public class AppOnlyCredential: OAuthCredential
+public final class AppOnlyCredential: OAuthCredential
 {
   public internal(set) var resources: [String:Any]? = nil
 
@@ -76,13 +76,14 @@ extension OAuth
   }
 
   func requestAppOnlyCredentials(handler: @escaping OAuthAuthenticationHandler) {
-    let urlString = configuration.requestTokenURI
-    let parameters = [
+    let urlString: String = configuration.requestTokenURI
+    let parameters: [String:String] = [
       "grant_type" : "client_credentials"
     ]
     if let requestURL = URL(string: urlString) {
       request(with: "POST", url: requestURL, parameters: parameters, completion: {
-        [unowned self] (data, response, error) in
+        [weak self] (data, response, error) in
+        guard let self = `self` else { return }
         if let httpResponse = response as? HTTPURLResponse,
            httpResponse.statusCode == 200 {
           if let data = data {
@@ -91,7 +92,7 @@ extension OAuth
                 if let accessToken = json["access_token"] as? String,
                    let   tokenType = json["token_type"] as? String {
                   let expiresIn: TimeInterval = 60 * 60 * 24 * 365
-                  let expiry = Date(timeIntervalSinceNow: expiresIn)
+                  let expiry: Date = Date(timeIntervalSinceNow: expiresIn)
                   self.credential.renew(token: accessToken, expiry: expiry, type: tokenType.lowercased())
                   handler(nil, nil)
                 }
@@ -113,13 +114,14 @@ extension OAuth
   }
 
   func verifyAppOnlyCredentials() {
-    let urlString = self.configuration.verifyTokenURI
-    let parameters = [
+    let urlString: String = self.configuration.verifyTokenURI
+    let parameters: [String:String] = [
       "resources" : "users,search,statuses"
     ]
     if let requestURL = URL(string: urlString) {
       request(with: "GET", url: requestURL, parameters: parameters, completion: {
-        [unowned self] (data, response, error) in
+        [weak self] (data, response, error) in
+        guard let self = `self` else { return }
         if let httpResponse = response as? HTTPURLResponse,
            httpResponse.statusCode == 200 {
           if let data = data {

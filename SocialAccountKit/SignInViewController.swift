@@ -3,15 +3,15 @@
  * FILE:	SignInViewController.swift
  * DESCRIPTION:	SocialAccountKit: View Controller for Sign In Service
  * DATE:	Fri, Sep 22 2017
- * UPDATED:	Mon, Nov 26 2018
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@ import Foundation
 import UIKit
 import WebKit
 
-public class SAKSignInViewController: UIViewController
+public final class SAKSignInViewController: UIViewController
 {
   public var callback: String = "swift-oauth://callback"
 
@@ -59,8 +59,8 @@ public class SAKSignInViewController: UIViewController
     case failed
 
     mutating func next(_ requestURL: URL, _ nextURL: URL, _ callback: String) {
-      let requestBase = requestURL.baseStringURIString
-      let    nextBase = nextURL.baseStringURIString
+      let requestBase: String = requestURL.baseStringURIString
+      let    nextBase: String = nextURL.baseStringURIString
       switch self {
         case .ready:
           if  requestURL == nextURL  { self = .start }
@@ -91,13 +91,15 @@ public class SAKSignInViewController: UIViewController
       }
     }
   }
-  var state: SignInState = .ready
 
-  var configuration = WKWebViewConfiguration()
-  lazy var webView: WKWebView = {
-    let webView = WKWebView(frame: self.view.bounds, configuration: configuration)
-    webView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+  private var state: SignInState = .ready
+
+  private var configuration: WKWebViewConfiguration = WKWebViewConfiguration()
+
+  private lazy var webView: WKWebView = {
+    let webView: WKWebView = WKWebView(frame: self.view.bounds, configuration: configuration)
     webView.navigationDelegate = self
+    webView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
     return webView
   }()
 
@@ -125,6 +127,11 @@ public class SAKSignInViewController: UIViewController
     }
   }
 
+  override public func didReceiveMemoryWarning() {
+    super.didReceiveMemoryWarning()
+    // Dispose of any resources that can be recreated.
+  }
+
   override public func loadView() {
     super.loadView()
 
@@ -142,15 +149,27 @@ public class SAKSignInViewController: UIViewController
     super.viewDidLoad()
 
     if let url = self.requestURL {
-      var request = URLRequest(url: url)
+      var request: URLRequest = URLRequest(url: url)
       request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
       webView.load(request)
     }
   }
 
-  override public func didReceiveMemoryWarning() {
-    super.didReceiveMemoryWarning()
-    // Dispose of any resources that can be recreated.
+  override public func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+
+    let safeAreaInsets: UIEdgeInsets = self.view.safeAreaInsets
+
+    let  width: CGFloat = self.view.bounds.size.width - (safeAreaInsets.left + safeAreaInsets.right)
+    let height: CGFloat = self.view.bounds.size.height - (safeAreaInsets.top + safeAreaInsets.bottom)
+
+    webView.frame = {
+      let x: CGFloat = safeAreaInsets.left
+      let y: CGFloat = safeAreaInsets.top
+      let w: CGFloat = width
+      let h: CGFloat = height
+      return CGRect(x: x, y: y, width: w, height: h)
+    }()
   }
 }
 
@@ -172,7 +191,7 @@ extension SAKSignInViewController: WKNavigationDelegate
     decisionHandler(.allow)
   }
 
-  fileprivate func handleTwitterSignIn(requestURL: URL, callbackURL: URL) {
+  private func handleTwitterSignIn(requestURL: URL, callbackURL: URL) {
     state.next(requestURL, callbackURL, callback)
     switch state {
       case .authorized:
@@ -193,7 +212,7 @@ extension SAKSignInViewController: WKNavigationDelegate
    * ログインフローを手作業で構築する - Facebook ログイン
    * https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/
    */
-  fileprivate func handleFacebookSignIn(requestURL: URL, callbackURL: URL) {
+  private func handleFacebookSignIn(requestURL: URL, callbackURL: URL) {
     if callbackURL.baseStringURIString == callback {
       NotificationCenter.default.post(name: .OAuthDidAuthenticateRequestToken, object: nil, userInfo: [
         OAuthAuthenticateCallbackURLKey: callbackURL
@@ -202,7 +221,7 @@ extension SAKSignInViewController: WKNavigationDelegate
     }
   }
 
-  fileprivate func handleGitHubSignIn(requestURL: URL, callbackURL: URL) {
+  private func handleGitHubSignIn(requestURL: URL, callbackURL: URL) {
     state.next(requestURL, callbackURL, callback)
 #if targetEnvironment(simulator)
 #if DEBUG_FLOW
@@ -236,7 +255,7 @@ extension SAKSignInViewController
    */
   public func clearCache(of dataTypesSet: WebsiteDataType = .allWebsiteData, in domainSubstring: String? = nil) {
     let dataStore = WKWebsiteDataStore.default()
-    let dataTypes = dataTypesSet.dataTypes()
+    let dataTypes = dataTypesSet.allDataTypes()
     if let domain = domainSubstring {
       dataStore.fetchDataRecords(ofTypes: dataTypes) {
         (records) in
@@ -273,7 +292,7 @@ public struct WebsiteDataType: OptionSet
     self.rawValue = rawValue
   }
 
-  func dataTypes() -> Set<String> {
+  func allDataTypes() -> Set<String> {
     if self.contains(.allWebsiteData) {
       return WKWebsiteDataStore.allWebsiteDataTypes()
     }

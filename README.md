@@ -62,9 +62,6 @@ Twitter あるいは Facebook のサイトでアプリを登録し、API Key と
   <array>
     <string>public_profile</string>
     <string>email</string>
-    <string>manage_pages</string>
-    <string>publish_pages</string>
-    <string>publish_actions</string>
     <string>user_posts</string>
     <string>user_friends</string>
   </array>
@@ -99,7 +96,7 @@ Xcode の Build Target を SocialAccountKitDemo に変更して Build を実行�
 
 ### SocialAccountKitSwift.framework のビルド
 
-Xcode の Build Target に SocialAccountKitFatBinary を指定して Build を実行すると、SocialAccountKitSwift.framework が作成される。これを自作アプリの Xcode の Embedded Binaries に設定する。良く使うなら、${HOME}/Library/Frameworks フォルダなどにコピーしておこう。
+Xcode の Build Target に SocialAccountKitXCFramework を指定して Build を実行すると、SocialAccountKitSwift.xcframework が作成される。これを自作アプリの Xcode の Embedded Binaries に設定する。良く使うなら、${HOME}/Library/Frameworks フォルダなどにコピーしておこう。
 
 #### サクッと習得するには
 
@@ -388,9 +385,9 @@ Qiita の [SocialAccountKit を使った iOS 11 以降の Twitter と Facebook A
 
 ## Requirements
 
- - Swift 4.2
- - iOS 12.1 or later
- - Xcode 10.1 or later
+ - Swift 5
+ - iOS 14.3 or later
+ - Xcode 12.3 or later
 
 ## ToDo
 
@@ -398,7 +395,7 @@ Qiita の [SocialAccountKit を使った iOS 11 以降の Twitter と Facebook A
 
 ## License Agreement
 
-Copyright (c) 2017-2018, Kouichi ABE (WALL) All rights reserved.
+Copyright (c) 2017-2021, Kouichi ABE (WALL) All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

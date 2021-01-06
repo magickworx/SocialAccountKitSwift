@@ -3,14 +3,14 @@
  * FILE:	RootViewController.swift
  * DESCRIPTION:	SocialAccountKitDemo: View Controller to Demonstrate Framework
  * DATE:	Sun, Oct  1 2017
- * UPDATED:	Mon, Nov 26 2018
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
- * COPYRIGHT:	(c) 2017-2018 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017-2018 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,26 +36,35 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *   THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: AppDelegate.m,v 1.6 2017/04/12 09:59:00 kouichi Exp $
- *
  *****************************************************************************/
 
 import UIKit
 import SocialAccountKitSwift
 
-class RootViewController: BaseViewController
+final class RootViewController: BaseViewController
 {
-  let tableView: UITableView = UITableView()
-  var tableData: [String] = []
+  private let kTableViewCellIdentifier: String = "UITableViewCellReusableIdentifier"
+  private lazy var tableView: UITableView = {
+    let tableView: UITableView = UITableView(frame: self.view.bounds)
+    tableView.register(UITableViewCell.self, forCellReuseIdentifier: kTableViewCellIdentifier)
+    tableView.delegate = self
+    tableView.dataSource = self
+    tableView.allowsSelection = false
+    tableView.rowHeight = UITableView.automaticDimension
+    tableView.estimatedRowHeight = 64.0
+    tableView.autoresizingMask = [ .flexibleWidth, .flexibleHeight ]
+    return tableView
+  }()
+  private var tableData: [String] = []
 
-  var composeItem: UIBarButtonItem = UIBarButtonItem()
+  private var composeItem: UIBarButtonItem = UIBarButtonItem()
 
-  let store = SAKAccountStore.shared
-  var accounts = [SAKAccount]()
+  private let store: SAKAccountStore = SAKAccountStore.shared
+  private var accounts = [SAKAccount]()
 
-  var accountType = SAKAccountType(.twitter)
+  private var accountType: SAKAccountType = SAKAccountType(.twitter)
 
-  let signInService = SAKSignInService(accountType: SAKAccountType(.appOnly))
+  private let signInService: SAKSignInService = SAKSignInService(accountType: SAKAccountType(.appOnly))
 
   override func setup() {
     super.setup()
@@ -73,20 +82,6 @@ class RootViewController: BaseViewController
   override func loadView() {
     super.loadView()
 
-    let  width: CGFloat = self.view.bounds.size.width
-    let height: CGFloat = self.view.bounds.size.height
-    let x: CGFloat = 0.0
-    let y: CGFloat = 0.0
-    let w: CGFloat = width
-    let h: CGFloat = height
-
-    tableView.frame = CGRect(x: x, y: y, width: w, height: h)
-    tableView.delegate = self
-    tableView.dataSource = self
-    tableView.allowsSelection = false
-    tableView.rowHeight = UITableView.automaticDimension
-    tableView.estimatedRowHeight = 64.0
-    tableView.autoresizingMask	= [ .flexibleWidth, .flexibleHeight ]
     self.view.addSubview(tableView)
   }
 
@@ -101,6 +96,23 @@ class RootViewController: BaseViewController
     super.viewWillAppear(animated)
 
     getAccounts()
+  }
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+
+    let safeAreaInsets: UIEdgeInsets = self.view.safeAreaInsets
+
+    let  width: CGFloat = self.view.bounds.size.width - (safeAreaInsets.left + safeAreaInsets.right)
+    let height: CGFloat = self.view.bounds.size.height - (safeAreaInsets.top + safeAreaInsets.bottom)
+
+    tableView.frame = {
+      let x: CGFloat = safeAreaInsets.left
+      let y: CGFloat = safeAreaInsets.top
+      let w: CGFloat = width
+      let h: CGFloat = height
+      return CGRect(x: x, y: y, width: w, height: h)
+    }()
   }
 }
 
@@ -140,24 +152,23 @@ private extension RootViewController
 
 extension RootViewController
 {
-  fileprivate func makeNaviBarItems() {
-    let chooseItem = UIBarButtonItem(barButtonSystemItem: .action,
-                                     target: self,
-                                     action: #selector(chooseAccount(_:)))
-    self.navigationItem.leftBarButtonItem = chooseItem
-
-    let addItem = UIBarButtonItem(barButtonSystemItem: .add,
-                                  target: self,
-                                  action: #selector(addAccount(_:)))
-    self.navigationItem.rightBarButtonItem = addItem
+  private func makeNaviBarItems() {
+    self.navigationItem.leftBarButtonItem = {
+      let image  = UIImage(systemName: "person.circle")
+      return UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(handleChoose))
+    }()
+    self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(handleAdd))
   }
 
-  @objc private func addAccount(_ sender: UIBarButtonItem) {
-    let viewController = SAKAccountViewController(accountType: accountType)
-    present(viewController, animated: true, completion: nil)
+  @objc private func handleAdd(_ item: UIBarButtonItem) {
+    autoreleasepool {
+      let viewController = SAKAccountViewController(accountType: accountType)
+      viewController.modalPresentationStyle = .overFullScreen
+      self.present(viewController, animated: true, completion: nil)
+    }
   }
 
-  @objc private func chooseAccount(_ sender: UIBarButtonItem) {
+  @objc private func handleChoose(_ item: UIBarButtonItem) {
     let alert = UIAlertController(title: accountType.description, message: "Choose an account", preferredStyle: .actionSheet)
     for account in accounts {
       alert.addAction(UIAlertAction(title: account.username, style: .default, handler: {
@@ -205,7 +216,7 @@ fileprivate enum ServiceType: Int
 
 extension RootViewController
 {
-  fileprivate func makeToolbar() {
+  private func makeToolbar() {
     let services = [ "Twitter", "Facebook", "AppOnly" ]
     let segmentedControl = UISegmentedControl(items: services)
     segmentedControl.selectedSegmentIndex = ServiceType.twitter.rawValue
@@ -471,13 +482,12 @@ extension RootViewController
 
 extension RootViewController: UITableViewDataSource
 {
-  func create_UITableViewCell() -> UITableViewCell {
-    let cell: UITableViewCell = UITableViewCell(style: .value1, reuseIdentifier: "Cell")
+  func create_UITableViewCell(at indexPath: IndexPath) -> UITableViewCell {
+    let cell = tableView.dequeueReusableCell(withIdentifier: kTableViewCellIdentifier, for: indexPath)
     cell.selectionStyle = .none
-    cell.textLabel?.font = UIFont.systemFont(ofSize: 14.0)
+    cell.textLabel?.font = UIFont.systemFont(ofSize: 18.0)
     cell.textLabel?.numberOfLines = 0
     cell.textLabel?.lineBreakMode = .byWordWrapping
-
     return cell
   }
 
@@ -490,11 +500,11 @@ extension RootViewController: UITableViewDataSource
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = self.create_UITableViewCell()
+    let cell = self.create_UITableViewCell(at: indexPath)
 
-    let row = indexPath.row
+    let row: Int = indexPath.row
     let text = tableData[row]
-    cell.textLabel!.text = text
+    cell.textLabel?.text = text
 
     return cell
   }

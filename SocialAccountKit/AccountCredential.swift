@@ -3,15 +3,15 @@
  * FILE:	AccountCredential.swift
  * DESCRIPTION:	SocialAccountKit: Encapsulates the info to authenticate a user
  * DATE:	Wed, Sep 20 2017
- * UPDATED:	Wed, Oct 25 2017
+ * UPDATED:	Tue, Jan  5 2021
  * AUTHOR:	Kouichi ABE (WALL) / 阿部康一
  * E-MAIL:	kouichi@MagickWorX.COM
  * URL:		http://www.MagickWorX.COM/
  * CHECKER:     http://quonos.nl/oauthTester/
- * COPYRIGHT:	(c) 2017 阿部康一／Kouichi ABE (WALL), All rights reserved.
+ * COPYRIGHT:	(c) 2017-2021 阿部康一／Kouichi ABE (WALL), All rights reserved.
  * LICENSE:
  *
- *  Copyright (c) 2017 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
+ *  Copyright (c) 2017-2021 Kouichi ABE (WALL) <kouichi@MagickWorX.COM>,
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,8 @@ import Foundation
 
 public struct SAKAccountCredential
 {
-  public internal(set) var oAuthToken: String! = nil
-  public internal(set) var tokenSecret: String! = nil
+  public internal(set) var oAuthToken: String? = nil
+  public internal(set) var tokenSecret: String? = nil
 
   // Initializes an account credential using OAuth.
   public init(oAuthToken: String, tokenSecret: String) {
@@ -52,9 +52,9 @@ public struct SAKAccountCredential
     self.tokenSecret = tokenSecret
   }
 
-  public internal(set) var oAuth2Token: String! = nil
-  public internal(set) var refreshToken: String! = nil
-  public internal(set) var expiryDate: Date! = nil
+  public internal(set) var oAuth2Token: String? = nil
+  public internal(set) var refreshToken: String? = nil
+  public internal(set) var expiryDate: Date? = nil
 
   public internal(set) var tokenType: String? = nil
 
@@ -70,7 +70,7 @@ public struct SAKAccountCredential
 extension SAKAccountCredential
 {
   // This property is only valid for OAuth2 credentials (for compatible ACAcountCredential)
-  public var oauthToken: String! {
+  public var oauthToken: String? {
     return oAuth2Token
   }
 }
